@@ -1,0 +1,267 @@
+﻿@inherits LayoutComponentBase
+
+<div class="dm-shell">
+    <aside class="dm-sidebar">
+        <div class="dm-sidebar__brand">
+            <div class="dm-brand__mark">DM</div>
+            <div class="dm-brand__text">
+                <div class="dm-brand__title">Demand Management</div>
+                <div class="dm-brand__sub">Workflow &amp; Prioritization</div>
+            </div>
+        </div>
+
+        <div class="dm-sidebar__nav">
+            <NavMenu />
+        </div>
+
+        <div class="dm-sidebar__footer">
+            <div class="dm-small">v1.0 • Internal</div>
+        </div>
+    </aside>
+
+    <div class="dm-main">
+        <header class="dm-topbar">
+            <div class="dm-topbar__left">
+                <div class="dm-topbar__title">Dashboard</div>
+                <div class="dm-topbar__hint">Track, assess and prioritize demand</div>
+            </div>
+
+            <div class="dm-topbar__right">
+                <a class="dm-topbar__link"
+                   href="https://learn.microsoft.com/aspnet/core/"
+                   target="_blank"
+                   rel="noreferrer">
+                    About
+                </a>
+            </div>
+        </header>
+
+        <main class="dm-content">
+            @Body
+        </main>
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet class="dm-error">
+    <div class="dm-error__box">
+        <div class="dm-error__title">Something went wrong</div>
+        <div class="dm-error__text">An unhandled error has occurred.</div>
+        <div class="dm-error__actions">
+            <a href="." class="dm-btn dm-btn--ghost reload">Reload</a>
+            <button type="button" class="dm-btn dm-btn--primary dismiss">Dismiss</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ===== Theme tokens ===== */
+:root{
+  --dm-bg: #070b14;
+  --dm-surface: #0f172a;
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-info: #06b6d4;
+  --dm-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+
+/* ===== App background + typography ===== */
+html, body{
+  height: 100%;
+}
+body{
+  margin: 0;
+  color: var(--dm-text);
+  background:
+    radial-gradient(1200px 800px at 10% 0%, rgba(37,99,235,.18), transparent 60%),
+    radial-gradient(900px 600px at 90% 10%, rgba(6,182,212,.12), transparent 55%),
+    var(--dm-bg);
+}
+
+/* ===== Shell layout ===== */
+.dm-shell{
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* ===== Sidebar ===== */
+.dm-sidebar{
+  border: 1px solid var(--dm-border);
+  border-radius: 18px;
+  background: rgba(255,255,255,.035);
+  box-shadow: var(--dm-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dm-sidebar__brand{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background:
+    radial-gradient(600px 200px at 20% 0%, rgba(37,99,235,.22), transparent 60%),
+    rgba(0,0,0,.10);
+  border-bottom: 1px solid var(--dm-border);
+}
+
+.dm-brand__mark{
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  letter-spacing: .04em;
+  color: white;
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  border: 1px solid rgba(37,99,235,.55);
+}
+
+.dm-brand__title{
+  font-weight: 850;
+  font-size: 14px;
+  line-height: 1.1;
+}
+.dm-brand__sub{
+  font-size: 12px;
+  color: var(--dm-faint);
+  margin-top: 2px;
+}
+
+.dm-sidebar__nav{
+  padding: 10px;
+  flex: 1;
+}
+
+.dm-sidebar__footer{
+  padding: 12px 16px;
+  border-top: 1px solid var(--dm-border);
+  color: var(--dm-faint);
+  background: rgba(0,0,0,.10);
+}
+
+.dm-small{ font-size: 12px; }
+
+/* ===== Main surface ===== */
+.dm-main{
+  border: 1px solid var(--dm-border);
+  border-radius: 18px;
+  background: rgba(255,255,255,.03);
+  box-shadow: var(--dm-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Topbar ===== */
+.dm-topbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--dm-border);
+  background:
+    radial-gradient(900px 220px at 10% 0%, rgba(6,182,212,.14), transparent 60%),
+    rgba(0,0,0,.12);
+}
+
+.dm-topbar__title{
+  font-weight: 900;
+  letter-spacing: -.01em;
+}
+.dm-topbar__hint{
+  font-size: 12.5px;
+  color: var(--dm-faint);
+  margin-top: 2px;
+}
+
+.dm-topbar__link{
+  color: var(--dm-text);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-topbar__link:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.07);
+}
+
+/* ===== Content area ===== */
+.dm-content{
+  padding: 18px;
+}
+
+/* ===== Buttons (shared) ===== */
+.dm-btn{
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 750;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+/* ===== Blazor error UI ===== */
+.dm-error{
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  display: none; /* Blazor toggles this element visibility when errors occur */
+}
+
+/* If Blazor shows it by inline styles, it will override this anyway */
+#blazor-error-ui{
+  /* keep default mechanism working */
+}
+
+.dm-error__box{
+  max-width: 560px;
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  background: rgba(15,23,42,.96);
+  padding: 14px 16px;
+  box-shadow: var(--dm-shadow);
+}
+
+.dm-error__title{ font-weight: 900; }
+.dm-error__text{ color: var(--dm-muted); margin-top: 2px; }
+.dm-error__actions{ display:flex; gap: 10px; margin-top: 10px; }
+
+/* ===== Responsive ===== */
+@@media (max-width: 900px){
+  .dm-shell{
+    grid-template-columns: 1fr;
+  }
+  .dm-sidebar{
+    order: 2;
+  }
+  .dm-main{
+    order: 1;
+  }
+}
+</style>

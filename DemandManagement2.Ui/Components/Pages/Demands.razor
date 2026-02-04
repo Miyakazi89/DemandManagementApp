@@ -1,0 +1,82 @@
+@page "/demands"
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+
+<h3>Demand Requests</h3>
+
+<p>
+    <a href="/demands/new">Submit New Request</a> |
+    <a href="/prioritization">Prioritization</a> |
+    <a href="/dashboard">Dashboard</a>
+</p>
+
+@if (_items is null)
+{
+    <p>Loading...</p>
+}
+else if (_items.Count == 0)
+{
+    <p>No demands found. Submit one to get started.</p>
+}
+else
+{
+    <ul>
+        @foreach (var d in _items)
+        {
+            <li>
+                <a href="@($"/demands/{d.Id}")">@d.Title</a>
+                <small> — @d.Status | Score: @(d.WeightedScore?.ToString() ?? "N/A")</small>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<DemandManagement2.Ui.Services.DemandListItem>? _items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _items = await Api.GetDemands();
+    }
+    @code {
+    private static string TypeText(int type) => type switch
+    {
+        0 => "Project",
+        1 => "Enhancement",
+        2 => "Fix",
+        3 => "Process Improvement",
+        4 => "Support",
+        _ => $"Type {type}"
+    };
+
+    private static string StatusText(int status) => status switch
+    {
+        0 => "Intake",
+        1 => "Assessment",
+        2 => "Approval",
+        3 => "Approved",
+        4 => "Rejected",
+        5 => "In Progress",
+        6 => "Completed",
+        _ => $"Status {status}"
+    };
+
+    private static string StatusBadgeClass(int status) => status switch
+    {
+        0 => "dm-badge dm-badge--muted",   // Intake
+        1 => "dm-badge dm-badge--warn",    // Assessment
+        2 => "dm-badge dm-badge--info",    // Approval
+        3 => "dm-badge dm-badge--success", // Approved
+        4 => "dm-badge dm-badge--danger",  // Rejected
+        _ => "dm-badge dm-badge--ghost"
+    };
+
+    private static string UrgencyPillClass(int urgency) => urgency switch
+    {
+        >= 5 => "dm-pillSmall dm-pillSmall--danger",
+        4 => "dm-pillSmall dm-pillSmall--warn",
+        _ => "dm-pillSmall"
+    };
+}
+
+}
+``

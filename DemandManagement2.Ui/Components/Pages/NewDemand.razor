@@ -1,0 +1,49 @@
+@page "/demands/new"
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject NavigationManager Nav
+
+<h3>Submit New Demand Request</h3>
+
+<div style="max-width:600px;">
+    <label>Title</label><br />
+    <input class="form-control" @bind="_model.Title" /><br />
+
+    <label>Problem Statement</label><br />
+    <textarea class="form-control" @bind="_model.ProblemStatement" rows="4"></textarea><br />
+
+    <label>Type</label><br />
+    <select class="form-select" @bind="_model.Type">
+        <option>Project</option>
+        <option>Enhancement</option>
+        <option>Service</option>
+        <option>ResourceRequest</option>
+    </select><br />
+
+    <label>Business Unit</label><br />
+    <input class="form-control" @bind="_model.BusinessUnit" /><br />
+
+    <label>Requested By</label><br />
+    <input class="form-control" @bind="_model.RequestedBy" /><br />
+
+    <label>Urgency (1–5)</label><br />
+    <input class="form-control" type="number" min="1" max="5" @bind="_model.Urgency" /><br />
+
+    <label>Estimated Effort (1–5)</label><br />
+    <input class="form-control" type="number" min="1" max="5" @bind="_model.EstimatedEffort" /><br />
+
+    <button class="btn btn-primary" @onclick="Submit">Submit</button>
+    <span style="margin-left:10px;">@_message</span>
+</div>
+
+@code {
+    private DemandManagement2.Ui.Services.CreateDemandRequest _model = new();
+    private string _message = "";
+
+    private async Task Submit()
+    {
+        _message = "Submitting...";
+        await Api.CreateDemand(_model);
+        Nav.NavigateTo("/demands");
+    }
+}
+``

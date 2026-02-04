@@ -1,0 +1,34 @@
+@page "/prioritization"
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+
+<h3>Prioritization</h3>
+
+@if (_items is null)
+{
+    <p>Loading...</p>
+}
+else if (_items.Count == 0)
+{
+    <p>No items in pipeline (UnderReview / Prioritized).</p>
+}
+else
+{
+    <ol>
+        @foreach (var d in _items)
+        {
+            <li>
+                <a href="@($"api/demands/{d.Id}")">@d.Title</a>
+                <small> — Score: @(d.WeightedScore?.ToString() ?? "N/A") | Urgency: @d.Urgency</small>
+            </li>
+        }
+    </ol>
+}
+
+@code {
+    private List<DemandManagement2.Ui.Services.DemandListItem>? _items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _items = await Api.Prioritization();
+    }
+}

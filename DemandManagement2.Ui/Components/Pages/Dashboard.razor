@@ -1,0 +1,489 @@
+@page "/dashboard"
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+
+<PageTitle>Dashboard</PageTitle>
+
+<div class="dm-dash">
+    <div class="dm-dash__header">
+        <div>
+            <div class="dm-pill">Dashboard</div>
+            <h1 class="dm-title">Summary</h1>
+            <p class="dm-subtitle">Quick overview of demand flow and what needs attention.</p>
+        </div>
+
+        <div class="dm-actions">
+            <button class="dm-btn dm-btn--ghost" @onclick="Refresh" disabled="@_loading">Refresh</button>
+            <button class="dm-btn dm-btn--primary" @onclick="ToggleRaw">
+                @(_showRaw ? "Hide Raw" : "Show Raw")
+            </button>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="dm-card dm-skeleton">
+            <div class="dm-skel-line w40"></div>
+            <div class="dm-skel-line w70"></div>
+            <div class="dm-skel-grid">
+                <div class="dm-skel-box"></div>
+                <div class="dm-skel-box"></div>
+                <div class="dm-skel-box"></div>
+                <div class="dm-skel-box"></div>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <div class="dm-card dm-alert">
+            <div class="dm-alert__title">Couldn’t load dashboard</div>
+            <div class="dm-alert__text">@_error</div>
+            <div class="dm-alert__actions">
+                <button class="dm-btn dm-btn--primary" @onclick="Refresh">Try again</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- KPI row -->
+        <div class="dm-grid dm-grid--4 dm-gap">
+            <div class="dm-kpi dm-card">
+                <div class="dm-kpi__label">Total Demands</div>
+                <div class="dm-kpi__value">@_kpiTotal</div>
+                <div class="dm-kpi__hint">All requests in the system</div>
+            </div>
+
+            <div class="dm-kpi dm-card">
+                <div class="dm-kpi__label">Intake</div>
+                <div class="dm-kpi__value">@_kpiIntake</div>
+                <div class="dm-kpi__hint">New items to review</div>
+            </div>
+
+            <div class="dm-kpi dm-card">
+                <div class="dm-kpi__label">Assessment</div>
+                <div class="dm-kpi__value">@_kpiAssessment</div>
+                <div class="dm-kpi__hint">Waiting to be scored</div>
+            </div>
+
+            <div class="dm-kpi dm-card">
+                <div class="dm-kpi__label">Awaiting Approval</div>
+                <div class="dm-kpi__value">@_kpiApproval</div>
+                <div class="dm-kpi__hint">Decision required</div>
+            </div>
+        </div>
+
+        <!-- Main panels -->
+        <div class="dm-grid dm-grid--2 dm-gap dm-mt">
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div>
+                        <div class="dm-card__title">Highlights</div>
+                        <div class="dm-card__hint">Actionable signals for today</div>
+                    </div>
+                    <div class="dm-badge dm-badge--info">Live</div>
+                </div>
+
+                <div class="dm-list">
+                    <div class="dm-list__item">
+                        <div class="dm-dot dm-dot--blue"></div>
+                        <div>
+                            <div class="dm-list__titleText">High urgency items</div>
+                            <div class="dm-list__subText">Urgency 4–5 that may need fast tracking.</div>
+                        </div>
+                        <div class="dm-chip">@_kpiHighUrgency</div>
+                    </div>
+
+                    <div class="dm-list__item">
+                        <div class="dm-dot dm-dot--green"></div>
+                        <div>
+                            <div class="dm-list__titleText">Prioritized items</div>
+                            <div class="dm-list__subText">Items with assessment scores available.</div>
+                        </div>
+                        <div class="dm-chip">@_kpiScored</div>
+                    </div>
+
+                    <div class="dm-divider"></div>
+
+                    <div class="dm-list__footer">
+                        <span class="dm-muted">Tip:</span> Use <b>Prioritization</b> to focus on the highest-impact work first.
+                    </div>
+                </div>
+            </div>
+
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div>
+                        <div class="dm-card__title">Top Priorities</div>
+                        <div class="dm-card__hint">Highest weighted score first</div>
+                    </div>
+                    <a class="dm-linkInline" href="/prioritization">View all</a>
+                </div>
+
+                @if (_top is null)
+                {
+                    <div class="dm-muted">No data.</div>
+                }
+                else if (_top.Count == 0)
+                {
+                    <div class="dm-muted">No prioritized demands yet.</div>
+                }
+                else
+                {
+                    <div class="dm-toplist">
+                        @foreach (var d in _top)
+                        {
+                            <div class="dm-toplist__row">
+                                <div class="dm-toplist__main">
+                                    <div class="dm-toplist__title">@d.Title</div>
+                                    <div class="dm-toplist__sub">@d.BusinessUnit • @d.RequestedBy</div>
+                                </div>
+                                <div class="dm-toplist__meta">
+                                    <span class="dm-pillSmall">Urg @d.Urgency</span>
+                                    <span class="dm-pillSmall dm-pillSmall--score">Score @(d.WeightedScore ?? 0)</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Raw JSON (optional) -->
+        @if (_showRaw)
+        {
+            <div class="dm-card dm-mt">
+                <div class="dm-card__header">
+                    <div>
+                        <div class="dm-card__title">Raw summary payload</div>
+                        <div class="dm-card__hint">Useful while wiring up charts</div>
+                    </div>
+                    <span class="dm-badge dm-badge--ghost">Debug</span>
+                </div>
+
+                <pre class="dm-code">@_rawJson</pre>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private object? _summary;
+    private bool _loading = true;
+    private bool _showRaw;
+    private string? _error;
+
+    private string _rawJson = "{}";
+
+    // KPI values (safe defaults)
+    private int _kpiTotal;
+    private int _kpiIntake;
+    private int _kpiAssessment;
+    private int _kpiApproval;
+    private int _kpiHighUrgency;
+    private int _kpiScored;
+
+    private List<DemandManagement2.Ui.Services.DemandListItem>? _top = new();
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Refresh() => await Load();
+
+    private void ToggleRaw() => _showRaw = !_showRaw;
+
+    private async Task Load()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _summary = await Api.DashboardSummary();
+
+            // Keep raw JSON view
+            _rawJson = System.Text.Json.JsonSerializer.Serialize(_summary,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+
+            // Since summary is object, compute KPIs safely using existing endpoints.
+            // This guarantees the dashboard still works even if summary schema changes.
+            var all = await Api.GetDemands();
+
+            _kpiTotal = all.Count;
+            _kpiHighUrgency = all.Count(d => d.Urgency >= 4);
+            _kpiScored = all.Count(d => d.WeightedScore is not null);
+
+            // NOTE: If your Status is an enum instead of string, tell me and I’ll adjust these comparisons.
+            _kpiIntake = all.Count(d => string.Equals(d.Status, "Intake", StringComparison.OrdinalIgnoreCase));
+            _kpiAssessment = all.Count(d => string.Equals(d.Status, "Assessment", StringComparison.OrdinalIgnoreCase));
+            _kpiApproval = all.Count(d => string.Equals(d.Status, "Approval", StringComparison.OrdinalIgnoreCase));
+
+            // Optional: top priorities list (if your prioritization endpoint exists)
+            try
+            {
+                var prio = await Api.Prioritization();
+                _top = prio.Take(5).ToList();
+            }
+            catch
+            {
+                _top = new(); // don’t fail dashboard if prioritization fails
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _top = new();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}
+
+<style>
+/* ===== Dashboard styling (self-contained) ===== */
+:root{
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-info: #06b6d4;
+  --dm-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+
+.dm-dash{ max-width: 1100px; }
+
+.dm-dash__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 16px;
+}
+
+.dm-title{
+  margin: 8px 0 6px;
+  font-size: 28px;
+  letter-spacing: -.02em;
+  color: var(--dm-text);
+}
+.dm-subtitle{
+  margin: 0;
+  color: var(--dm-muted);
+  max-width: 70ch;
+  line-height: 1.6;
+}
+
+.dm-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+/* shared pill + badge */
+.dm-pill{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.06);
+  color: var(--dm-muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.dm-badge{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--dm-border);
+}
+.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+.dm-badge--ghost{ background: rgba(255,255,255,.04); color: var(--dm-muted); }
+
+/* cards */
+.dm-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.dm-card__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.dm-card__title{ font-weight: 900; color: var(--dm-text); }
+.dm-card__hint{ font-size: 12.5px; color: var(--dm-faint); margin-top: 2px; }
+
+.dm-divider{ height:1px; background: var(--dm-border); margin: 12px 0; }
+
+.dm-grid{ display:grid; }
+.dm-grid--4{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dm-grid--2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dm-gap{ gap: 14px; }
+.dm-mt{ margin-top: 14px; }
+
+/* KPIs */
+.dm-kpi__label{ color: var(--dm-faint); font-size: 12.5px; }
+.dm-kpi__value{ font-size: 28px; font-weight: 950; margin-top: 6px; }
+.dm-kpi__hint{ color: var(--dm-muted); font-size: 12.5px; margin-top: 6px; }
+
+/* List */
+.dm-list{ margin-top: 6px; }
+.dm-list__item{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 14px;
+}
+.dm-list__item:hover{ background: rgba(255,255,255,.03); }
+.dm-dot{
+  width: 10px; height: 10px; border-radius: 999px;
+  background: rgba(255,255,255,.25);
+}
+.dm-dot--blue{ background: rgba(37,99,235,.8); }
+.dm-dot--green{ background: rgba(34,197,94,.8); }
+
+.dm-list__titleText{ font-weight: 850; }
+.dm-list__subText{ color: var(--dm-muted); font-size: 12.5px; margin-top: 2px; }
+
+.dm-chip{
+  margin-left: auto;
+  border: 1px solid var(--dm-border);
+  background: rgba(0,0,0,.18);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 850;
+}
+
+.dm-list__footer{ color: var(--dm-muted); font-size: 13px; }
+
+/* Top list */
+.dm-toplist{ display:flex; flex-direction: column; gap: 10px; }
+.dm-toplist__row{
+  display:flex; align-items:center; justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--dm-border);
+  background: rgba(0,0,0,.14);
+}
+.dm-toplist__title{ font-weight: 900; }
+.dm-toplist__sub{ color: var(--dm-muted); font-size: 12.5px; margin-top: 2px; }
+.dm-toplist__meta{ display:flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+.dm-pillSmall{
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--dm-text);
+}
+.dm-pillSmall--score{
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.25);
+  color: #bbf7d0;
+}
+
+.dm-linkInline{
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 800;
+}
+.dm-linkInline:hover{ text-decoration: underline; }
+
+/* Buttons */
+.dm-btn{
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.dm-btn:disabled{ opacity: .6; cursor: not-allowed; }
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+/* Code */
+.dm-code{
+  background: rgba(0,0,0,.25);
+  border: 1px solid var(--dm-border);
+  border-radius: 14px;
+  padding: 12px;
+  overflow:auto;
+  color: rgba(255,255,255,.85);
+  font-size: 12.5px;
+}
+
+/* Skeleton */
+.dm-skeleton{ padding: 18px; }
+.dm-skel-line{
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  margin-bottom: 10px;
+  overflow: hidden;
+  position: relative;
+}
+.dm-skel-line::after,
+.dm-skel-box::after{
+  content:"";
+  position:absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+  animation: shimmer 1.2s infinite;
+}
+.w40{ width: 40%; }
+.w70{ width: 70%; }
+
+.dm-skel-grid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.dm-skel-box{
+  height: 88px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.06);
+  position: relative;
+  overflow:hidden;
+}
+
+@@keyframes shimmer{
+  0%{ transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
+
+/* Alert */
+.dm-alert__title{ font-weight: 950; }
+.dm-alert__text{ color: var(--dm-muted); margin-top: 6px; }
+.dm-alert__actions{ margin-top: 12px; }
+
+@@media (max-width: 1000px){
+  .dm-grid--4{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dm-grid--2{ grid-template-columns: 1fr; }
+}
+
+@@media (max-width: 520px){
+  .dm-grid--4{ grid-template-columns: 1fr; }
+  .dm-dash__header{ flex-direction: column; }
+}
+</style>

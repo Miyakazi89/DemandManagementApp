@@ -1,0 +1,99 @@
+@page "/demands/{Id:guid}"
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+
+<h3>Demand Details</h3>
+
+@if (_demand is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div style="max-width:850px;">
+        <h4>@_demand.Title</h4>
+        <p><b>Status:</b> @_demand.Status | <b>Score:</b> @(_demand.WeightedScore?.ToString() ?? "N/A")</p>
+        <p><b>Business Unit:</b> @_demand.BusinessUnit</p>
+        <p><b>Requested By:</b> @_demand.RequestedBy</p>
+        <p><b>Problem Statement:</b><br />@_demand.ProblemStatement</p>
+
+        <hr />
+        <h4>Assessment</h4>
+
+        <div style="max-width:450px;">
+            <label>Business Value</label>
+            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.BusinessValue" />
+
+            <label>Cost Impact</label>
+            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.CostImpact" />
+
+            <label>Risk</label>
+            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.Risk" />
+
+            <label>Resource Need</label>
+            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.ResourceNeed" />
+
+            <label>Strategic Alignment</label>
+            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.StrategicAlignment" />
+
+            <label>Assessed By</label>
+            <input class="form-control" @bind="_assessment.AssessedBy" />
+            <br />
+
+            <button class="btn btn-secondary" @onclick="SaveAssessment">Save Assessment</button>
+            <span style="margin-left:10px;">@_msgA</span>
+        </div>
+
+        <hr />
+        <h4>Approval</h4>
+
+        <div style="max-width:450px;">
+            <label>Decision</label>
+            <select class="form-select" @bind="_approval.Status">
+                <option>Approved</option>
+                <option>Rejected</option>
+                <option>OnHold</option>
+            </select>
+
+            <label>Decision By</label>
+            <input class="form-control" @bind="_approval.DecisionBy" />
+
+            <label>Comments</label>
+            <textarea class="form-control" @bind="_approval.Comments" rows="3"></textarea>
+            <br />
+
+            <button class="btn btn-success" @onclick="SaveApproval">Save Approval</button>
+            <span style="margin-left:10px;">@_msgP</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private DemandManagement2.Ui.Services.DemandDetails? _demand;
+    private DemandManagement2.Ui.Services.CreateOrUpdateAssessment _assessment = new();
+    private DemandManagement2.Ui.Services.CreateApproval _approval = new();
+    private string _msgA = "";
+    private string _msgP = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _demand = await Api.GetDemand(Id);
+    }
+
+    private async Task SaveAssessment()
+    {
+        _msgA = "Saving...";
+        await Api.SaveAssessment(Id, _assessment);
+        _demand = await Api.GetDemand(Id);
+        _msgA = "Saved ✅";
+    }
+
+    private async Task SaveApproval()
+    {
+        _msgP = "Saving...";
+        await Api.SaveApproval(Id, _approval);
+        _demand = await Api.GetDemand(Id);
+        _msgP = "Saved ✅";
+    }
+}

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="DemandManagement2.Domain/DemandManagement2.Domain.csproj" />
+  <Project Path="DemandManagement2.Infrastructure/DemandManagement2.Infrastructure.csproj" />
+  <Project Path="DemandManagement2.Tests/DemandManagement2.Tests.csproj" />
+  <Project Path="DemandManagement2.Ui/DemandManagement2.Ui.csproj" />
+</Solution>

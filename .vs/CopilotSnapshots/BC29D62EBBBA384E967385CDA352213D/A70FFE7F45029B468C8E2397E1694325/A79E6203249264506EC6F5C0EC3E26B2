@@ -1,0 +1,13 @@
+﻿{
+  "ApiBaseUrl": "https://localhost:7020",
+
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+
+  "AllowedHosts": "*"
+}

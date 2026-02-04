@@ -1,0 +1,5 @@
+{
+    "dataworkspace.excludedProjects": [
+        "DemandManagementDB2/DemandManagementDB2.sqlproj"
+    ]
+}

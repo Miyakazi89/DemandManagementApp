@@ -1,0 +1,17 @@
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\bin\Debug\net10.0\DemandManagement2.Infrastructure.deps.json
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\bin\Debug\net10.0\DemandManagement2.Infrastructure.runtimeconfig.json
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\bin\Debug\net10.0\DemandManagement2.Infrastructure.dll
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\bin\Debug\net10.0\DemandManagement2.Infrastructure.pdb
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\bin\Debug\net10.0\DemandManagement2.Domain.dll
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\bin\Debug\net10.0\DemandManagement2.Domain.pdb
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.AssemblyInfo.cs
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandMa.066CF34A.Up2Date
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.dll
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\refint\DemandManagement2.Infrastructure.dll
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.pdb
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.genruntimeconfig.cache
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\ref\DemandManagement2.Infrastructure.dll

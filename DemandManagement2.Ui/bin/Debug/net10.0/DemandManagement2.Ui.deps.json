@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "DemandManagement2.Ui/1.0.0": {
+        "runtime": {
+          "DemandManagement2.Ui.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "DemandManagement2.Ui/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

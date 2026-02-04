@@ -1,0 +1,340 @@
+﻿@page "/"
+@inject NavigationManager Nav
+
+<PageTitle>Home</PageTitle>
+
+<div class="dm-hero">
+    <div class="dm-hero__content">
+        <div class="dm-pill">Demand Management</div>
+        <h1 class="dm-hero__title">Welcome back 👋</h1>
+        <p class="dm-hero__subtitle">
+            Capture demand requests, assess value, and prioritize work with a clear, consistent workflow.
+        </p>
+
+        <div class="dm-hero__actions">
+            <button class="dm-btn dm-btn--primary" @onclick='() => Nav.NavigateTo("/demands/new")'>
+                + New Demand
+            </button>
+
+            <button class="dm-btn dm-btn--ghost" @onclick='() => Nav.NavigateTo("/demands")'>
+                View Demands
+            </button>
+
+            <button class="dm-btn dm-btn--ghost" @onclick='() => Nav.NavigateTo("/dashboard")'>
+                Dashboard
+            </button>
+        </div>
+    </div>
+
+    <div class="dm-hero__panel">
+        <div class="dm-card dm-card--soft">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Today’s Overview</div>
+                    <div class="dm-card__hint">A quick snapshot of what needs attention.</div>
+                </div>
+                <div class="dm-badge dm-badge--info">Live</div>
+            </div>
+
+            <div class="dm-grid dm-grid--3">
+                <div class="dm-stat">
+                    <div class="dm-stat__label">New Intake</div>
+                    <div class="dm-stat__value">—</div>
+                </div>
+                <div class="dm-stat">
+                    <div class="dm-stat__label">In Assessment</div>
+                    <div class="dm-stat__value">—</div>
+                </div>
+                <div class="dm-stat">
+                    <div class="dm-stat__label">Awaiting Approval</div>
+                    <div class="dm-stat__value">—</div>
+                </div>
+            </div>
+
+            <div class="dm-divider"></div>
+
+            <div class="dm-list">
+                <div class="dm-list__title">Quick Links</div>
+                <a class="dm-link" href="/prioritization">Prioritization</a>
+                <a class="dm-link" href="/demands">All Demands</a>
+                <a class="dm-link" href="/dashboard">Reports &amp; Summary</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dm-section">
+    <h2 class="dm-section__title">Get things done faster</h2>
+    <p class="dm-section__subtitle">
+        Use the workflow to keep requests structured and decisions transparent.
+    </p>
+
+    <div class="dm-grid dm-grid--3 dm-gap">
+        <div class="dm-card">
+            <div class="dm-card__icon">📝</div>
+            <div class="dm-card__title">Capture Demand</div>
+            <div class="dm-card__text">
+                Create a request with business context, urgency, and effort.
+            </div>
+            <button class="dm-btn dm-btn--link" @onclick='() => Nav.NavigateTo("/demands/new")'>
+                Create a demand →
+            </button>
+        </div>
+
+        <div class="dm-card">
+            <div class="dm-card__icon">📊</div>
+            <div class="dm-card__title">Assess Value</div>
+            <div class="dm-card__text">
+                Score business value, cost impact, risk, and alignment for better prioritization.
+            </div>
+            <button class="dm-btn dm-btn--link" @onclick='() => Nav.NavigateTo("/demands")'>
+                Assess a demand →
+            </button>
+        </div>
+
+        <div class="dm-card">
+            <div class="dm-card__icon">✅</div>
+            <div class="dm-card__title">Approve &amp; Prioritize</div>
+            <div class="dm-card__text">
+                Make informed decisions and focus on the highest-impact work first.
+            </div>
+            <button class="dm-btn dm-btn--link" @onclick='() => Nav.NavigateTo("/prioritization")'>
+                View priorities →
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer class="dm-footer">
+    <div class="dm-footer__text">
+        Built for clarity • Designed for speed • Ready for scale
+    </div>
+</footer>
+
+<style>
+:root{
+  --dm-bg: #0b1220;
+  --dm-surface: #0f172a;
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-info: #06b6d4;
+  --dm-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+
+/* Page background (safe: won't break layout) */
+body{
+  background: radial-gradient(1200px 800px at 10% 0%, rgba(37,99,235,.18), transparent 60%),
+              radial-gradient(900px 600px at 90% 10%, rgba(6,182,212,.12), transparent 55%),
+              #070b14;
+}
+
+/* HERO */
+.dm-hero{
+  display:grid;
+  grid-template-columns: 1.25fr .9fr;
+  gap: 22px;
+  margin: 18px 0 28px;
+  padding: 26px;
+  border-radius: 18px;
+  background:
+    radial-gradient(1200px 500px at 20% 0%, rgba(37, 99, 235, .35), transparent 60%),
+    radial-gradient(900px 450px at 90% 25%, rgba(6, 182, 212, .25), transparent 55%),
+    linear-gradient(180deg, rgba(15, 23, 42, .95), rgba(2, 6, 23, .95));
+  border: 1px solid var(--dm-border);
+  box-shadow: var(--dm-shadow);
+}
+
+.dm-hero__content{ padding: 6px 6px 6px 10px; }
+.dm-hero__title{
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: 1.05;
+  margin: 10px 0 10px;
+  color: var(--dm-text);
+  letter-spacing: -.02em;
+}
+.dm-hero__subtitle{
+  max-width: 62ch;
+  color: var(--dm-muted);
+  font-size: 15.5px;
+  line-height: 1.6;
+  margin: 0 0 18px;
+}
+.dm-hero__actions{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* PILL */
+.dm-pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.06);
+  color: var(--dm-muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* CARDS */
+.dm-hero__panel{ display:flex; align-items: stretch; }
+.dm-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 16px;
+}
+.dm-card--soft{
+  width: 100%;
+  background: rgba(255,255,255,.035);
+}
+.dm-card__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dm-card__title{
+  font-weight: 750;
+  color: var(--dm-text);
+  margin: 0;
+}
+.dm-card__hint{
+  color: var(--dm-faint);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+.dm-card__icon{
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.dm-card__text{
+  color: var(--dm-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 6px 0 10px;
+}
+
+/* GRID + STATS */
+.dm-grid{ display:grid; }
+.dm-grid--3{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dm-gap{ gap: 14px; }
+
+.dm-stat{
+  border-radius: 14px;
+  padding: 12px 12px;
+  border: 1px solid var(--dm-border);
+  background: rgba(0,0,0,.18);
+}
+.dm-stat__label{ color: var(--dm-faint); font-size: 12.5px; }
+.dm-stat__value{ color: var(--dm-text); font-weight: 800; font-size: 22px; margin-top: 4px; }
+
+.dm-divider{
+  height: 1px;
+  background: var(--dm-border);
+  margin: 14px 0;
+}
+
+/* LINKS */
+.dm-list__title{
+  color: var(--dm-faint);
+  font-size: 12.5px;
+  margin-bottom: 8px;
+}
+.dm-link{
+  display:block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.03);
+  color: var(--dm-text);
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-link:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.06);
+}
+
+/* BADGE */
+.dm-badge{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--dm-border);
+}
+.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+
+/* BUTTONS */
+.dm-btn{
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+.dm-btn--link{
+  background: transparent;
+  border: none;
+  color: #93c5fd;
+  padding: 0;
+}
+.dm-btn--link:hover{ text-decoration: underline; }
+
+/* SECTION */
+.dm-section{ margin-top: 16px; }
+.dm-section__title{
+  margin: 0 0 6px;
+  color: var(--dm-text);
+  font-size: 22px;
+  letter-spacing: -.01em;
+}
+.dm-section__subtitle{
+  margin: 0 0 14px;
+  color: var(--dm-muted);
+  max-width: 72ch;
+}
+
+/* FOOTER */
+.dm-footer{
+  margin: 22px 0 10px;
+  padding: 14px 10px;
+  border-top: 1px solid var(--dm-border);
+}
+.dm-footer__text{
+  color: var(--dm-faint);
+  font-size: 12.5px;
+}
+
+/* Responsive */
+@@media (max-width: 900px){
+  .dm-hero{ grid-template-columns: 1fr; padding: 18px; }
+  .dm-grid--3{ grid-template-columns: 1fr; }
+}
+</style>
+``
