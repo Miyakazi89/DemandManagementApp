@@ -7,23 +7,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Read API Base URL from appsettings.json
+// ✅ Read from appsettings.json
 var apiBase = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5182";
 
-// Named HttpClient for your API
 builder.Services.AddHttpClient("DemandApi", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5182/");
+    client.BaseAddress = new Uri(apiBase.TrimEnd('/') + "/");
+    client.DefaultRequestHeaders.Accept.Clear();
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// Your wrapper service
 builder.Services.AddScoped<DemandApiClient>();
 
 var app = builder.Build();
 
 app.UseStaticFiles();
+app.UseRouting();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()

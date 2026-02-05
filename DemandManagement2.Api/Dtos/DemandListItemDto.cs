@@ -10,7 +10,7 @@ public sealed record DemandListItemDto(
     string BusinessUnit,
     string RequestedBy,
     int Urgency,
-    int EstimatedEffort,
+    decimal EstimatedEffort,
     decimal? WeightedScore,
     DateTime CreatedAtUtc
 );

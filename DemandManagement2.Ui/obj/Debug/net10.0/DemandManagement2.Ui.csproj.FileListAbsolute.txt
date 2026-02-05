@@ -83,3 +83,4 @@ C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandM
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\DemandManagement2.Ui.genruntimeconfig.cache
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\ref\DemandManagement2.Ui.dll
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\p3m3pz57g7-{0}-khy4lop6wu-khy4lop6wu.gz
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\DemandManagement2.Ui.sourcelink.json

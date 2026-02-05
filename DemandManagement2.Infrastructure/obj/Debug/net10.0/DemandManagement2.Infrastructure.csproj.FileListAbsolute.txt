@@ -15,3 +15,4 @@ C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandM
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.pdb
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.genruntimeconfig.cache
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\ref\DemandManagement2.Infrastructure.dll
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Infrastructure\obj\Debug\net10.0\DemandManagement2.Infrastructure.sourcelink.json

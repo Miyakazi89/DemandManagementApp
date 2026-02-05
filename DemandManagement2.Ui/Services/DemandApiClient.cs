@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 
+
 namespace DemandManagement2.Ui.Services;
 
 public class DemandApiClient
@@ -10,13 +11,21 @@ public class DemandApiClient
         => _http = factory.CreateClient("DemandApi");
 
     public async Task<List<DemandListItem>> GetDemands()
-        => await _http.GetFromJsonAsync<List<DemandListItem>>("http://localhost:5182/api/demands") ?? new();
+        => await _http.GetFromJsonAsync<List<DemandListItem>>("/api/demands") ?? new();
 
     public async Task<DemandDetails?> GetDemand(Guid id)
         => await _http.GetFromJsonAsync<DemandDetails>($"/api/demands/{id}");
 
     public async Task CreateDemand(CreateDemandRequest request)
-        => (await _http.PostAsJsonAsync("/api/demands", request)).EnsureSuccessStatusCode();
+{
+    var response = await _http.PostAsJsonAsync("/api/demands", request);
+
+    if (!response.IsSuccessStatusCode)
+    {
+        var body = await response.Content.ReadAsStringAsync();
+        throw new Exception($"POST /api/demands failed: {(int)response.StatusCode} {response.ReasonPhrase}. Body: {body}");
+    }
+}
 
     public async Task SaveAssessment(Guid demandId, CreateOrUpdateAssessment request)
         => (await _http.PostAsJsonAsync($"/api/demands/{demandId}/assessment", request)).EnsureSuccessStatusCode();
@@ -29,7 +38,7 @@ public class DemandApiClient
 
    
 public async Task<List<DemandListItem>> Prioritization()
-    => await _http.GetFromJsonAsync<List<DemandListItem>>("api/prioritization") ?? new();
+    => await _http.GetFromJsonAsync<List<DemandListItem>>("/api/prioritization")?? new();
 
 }
 
@@ -37,7 +46,7 @@ public async Task<List<DemandListItem>> Prioritization()
 public record DemandListItem(
     Guid Id,
     string Title,
-    string Type,
+    DemandType Type,
     string Status,
     string BusinessUnit,
     string RequestedBy,
@@ -51,7 +60,7 @@ public record DemandDetails(
     Guid Id,
     string Title,
     string ProblemStatement,
-    string Type,
+    DemandType Type,
     string Status,
     string BusinessUnit,
     string RequestedBy,
@@ -67,11 +76,19 @@ public class CreateDemandRequest
 {
     public string Title { get; set; } = "";
     public string ProblemStatement { get; set; } = "";
-    public string Type { get; set; } = "Project";
+    public DemandType Type { get; set; } = DemandType.Project;
     public string BusinessUnit { get; set; } = "";
     public string RequestedBy { get; set; } = "";
     public int Urgency { get; set; } = 3;
     public decimal EstimatedEffort { get; set; } = 3;
+}
+
+public enum DemandType
+{
+    Project,
+    Enhancement,
+    Service,
+    ResourceRequest
 }
 
 public class CreateOrUpdateAssessment

@@ -39,11 +39,18 @@
     private DemandManagement2.Ui.Services.CreateDemandRequest _model = new();
     private string _message = "";
 
-    private async Task Submit()
+private async Task Submit()
+{
+    try
     {
         _message = "Submitting...";
         await Api.CreateDemand(_model);
+        _message = "Submitted!";
         Nav.NavigateTo("/demands");
     }
+    catch (Exception ex)
+    {
+        _message = $"Submit failed: {ex.Message}";
+    }
 }
-``
+}
