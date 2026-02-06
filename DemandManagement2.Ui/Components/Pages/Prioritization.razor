@@ -1,28 +1,69 @@
 @page "/prioritization"
+@rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 
-<h3>Prioritization</h3>
+<div class="dm-page">
+    <div class="dm-page__header">
+        <div>
+            <div class="dm-pill">Priority</div>
+            <h1 class="dm-title">Prioritization</h1>
+            <p class="dm-subtitle">Demands ranked by weighted score. Higher scores indicate higher priority.</p>
+        </div>
+        <div class="dm-actions">
+            <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+            <a href="/demands" class="dm-btn dm-btn--ghost">All Demands</a>
+            <a href="/demands/new" class="dm-btn dm-btn--primary">+ New Request</a>
+        </div>
+    </div>
 
-@if (_items is null)
-{
-    <p>Loading...</p>
-}
-else if (_items.Count == 0)
-{
-    <p>No items in pipeline (UnderReview / Prioritized).</p>
-}
-else
-{
-    <ol>
-        @foreach (var d in _items)
+    <div class="dm-card">
+        <div class="dm-card__header">
+            <div>
+                <div class="dm-card__title">Priority Queue</div>
+                <div class="dm-card__hint">Items under review, sorted by weighted score</div>
+            </div>
+            <span class="dm-badge dm-badge--info">@(_items?.Count ?? 0) Items</span>
+        </div>
+
+        @if (_items is null)
         {
-            <li>
-                <a href="@($"api/demands/{d.Id}")">@d.Title</a>
-                <small> — Score: @(d.WeightedScore?.ToString() ?? "N/A") | Urgency: @d.Urgency</small>
-            </li>
+            <div class="dm-loading">Loading...</div>
         }
-    </ol>
-}
+        else if (_items.Count == 0)
+        {
+            <div class="dm-empty">
+                <div class="dm-empty__text">No items in the priority queue yet.</div>
+                <div class="dm-empty__hint">Demands need to be assessed before they appear here.</div>
+            </div>
+        }
+        else
+        {
+            <div class="dm-priolist">
+                @{ var rank = 1; }
+                @foreach (var d in _items)
+                {
+                    <a href="@($"/demands/{d.Id}")" class="dm-prio-row">
+                        <div class="dm-prio-rank">#@rank</div>
+                        <div class="dm-prio-main">
+                            <div class="dm-prio-title">@d.Title</div>
+                            <div class="dm-prio-sub">
+                                <span>@d.BusinessUnit</span>
+                                <span class="dm-sep">|</span>
+                                <span>@d.RequestedBy</span>
+                            </div>
+                        </div>
+                        <div class="dm-prio-meta">
+                            <span class="dm-pillSmall dm-pillSmall--status">@d.Status</span>
+                            <span class="dm-pillSmall">Urg @d.Urgency</span>
+                            <span class="dm-pillSmall dm-pillSmall--score">Score @(d.WeightedScore ?? 0)</span>
+                        </div>
+                    </a>
+                    rank++;
+                }
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private List<DemandManagement2.Ui.Services.DemandListItem>? _items;
@@ -32,3 +73,205 @@ else
         _items = await Api.Prioritization();
     }
 }
+
+<style>
+:root{
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-info: #06b6d4;
+}
+
+.dm-page{ max-width: 1100px; }
+
+.dm-page__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 20px;
+  flex-wrap: wrap;
+}
+
+.dm-title{
+  margin: 8px 0 6px;
+  font-size: 28px;
+  letter-spacing: -.02em;
+  color: var(--dm-text);
+}
+.dm-subtitle{
+  margin: 0;
+  color: var(--dm-muted);
+  line-height: 1.6;
+}
+
+.dm-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+.dm-pill{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.06);
+  color: var(--dm-muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dm-badge{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--dm-border);
+}
+.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+
+.dm-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.dm-card__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.dm-card__title{ font-weight: 900; color: var(--dm-text); }
+.dm-card__hint{ font-size: 12.5px; color: var(--dm-faint); margin-top: 2px; }
+
+.dm-btn{
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+.dm-loading{
+  padding: 40px;
+  text-align: center;
+  color: var(--dm-muted);
+}
+
+.dm-empty{
+  padding: 40px;
+  text-align: center;
+}
+.dm-empty__text{
+  color: var(--dm-muted);
+  margin-bottom: 8px;
+}
+.dm-empty__hint{
+  color: var(--dm-faint);
+  font-size: 13px;
+}
+
+.dm-priolist{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dm-prio-row{
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--dm-border);
+  background: rgba(0,0,0,.14);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+.dm-prio-row:hover{
+  background: rgba(255,255,255,.08);
+  transform: translateX(4px);
+}
+
+.dm-prio-rank{
+  font-size: 20px;
+  font-weight: 950;
+  color: var(--dm-primary);
+  min-width: 40px;
+}
+
+.dm-prio-main{
+  flex: 1;
+}
+
+.dm-prio-title{
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--dm-text);
+}
+.dm-prio-sub{
+  color: var(--dm-muted);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.dm-sep{
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.dm-prio-meta{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dm-pillSmall{
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--dm-text);
+  white-space: nowrap;
+}
+.dm-pillSmall--status{
+  background: rgba(37,99,235,.15);
+  border-color: rgba(37,99,235,.3);
+  color: #93c5fd;
+}
+.dm-pillSmall--score{
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.25);
+  color: #bbf7d0;
+}
+
+@@media (max-width: 700px){
+  .dm-page__header{ flex-direction: column; }
+  .dm-prio-row{ flex-direction: column; align-items: flex-start; }
+  .dm-prio-meta{ margin-top: 10px; }
+}
+</style>

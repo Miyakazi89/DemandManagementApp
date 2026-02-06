@@ -4,6 +4,7 @@ using DemandManagement2.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DemandManagement2.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260206075428_AddResourcesAndDecisionNotes")]
+    partial class AddResourcesAndDecisionNotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,9 +62,6 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("AnnualBenefit")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<DateTime>("AssessedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -72,23 +72,11 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                     b.Property<int>("BusinessValue")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("CalculatedNPV")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("CostImpact")
                         .HasColumnType("int");
 
                     b.Property<Guid>("DemandRequestId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("DiscountRate")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("InitialCost")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ProjectYears")
-                        .HasColumnType("int");
 
                     b.Property<int>("ResourceNeed")
                         .HasColumnType("int");

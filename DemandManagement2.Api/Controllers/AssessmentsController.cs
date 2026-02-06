@@ -17,21 +17,10 @@ public class AssessmentsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<AssessmentDto>> Get(Guid demandId)
     {
-        var assessment = await _db.Assessments.FirstOrDefaultAsync(a => a.DemandRequestId == demandId);
-        if (assessment is null) return NotFound();
+        var a = await _db.Assessments.FirstOrDefaultAsync(x => x.DemandRequestId == demandId);
+        if (a is null) return NotFound();
 
-        return Ok(new AssessmentDto(
-            assessment.Id,
-            assessment.DemandRequestId,
-            assessment.BusinessValue,
-            assessment.CostImpact,
-            assessment.Risk,
-            assessment.ResourceNeed,
-            assessment.StrategicAlignment,
-            assessment.WeightedScore,
-            assessment.AssessedBy,
-            assessment.AssessedAtUtc
-        ));
+        return Ok(ToDto(a));
     }
 
     [HttpPost]
@@ -43,22 +32,33 @@ public class AssessmentsController : ControllerBase
 
         if (demand is null) return NotFound("Demand not found.");
 
-        // Create or update assessment
-        var assessment = demand.Assessment ?? new Assessment { DemandRequestId = demandId };
+        var a = demand.Assessment ?? new Assessment { DemandRequestId = demandId };
 
-        assessment.BusinessValue = dto.BusinessValue;
-        assessment.CostImpact = dto.CostImpact;
-        assessment.Risk = dto.Risk;
-        assessment.ResourceNeed = dto.ResourceNeed;
-        assessment.StrategicAlignment = dto.StrategicAlignment;
-        assessment.AssessedBy = dto.AssessedBy;
-        assessment.AssessedAtUtc = DateTime.UtcNow;
+        // scoring fields
+        a.BusinessValue = dto.BusinessValue;
+        a.CostImpact = dto.CostImpact;
+        a.Risk = dto.Risk;
+        a.ResourceNeed = dto.ResourceNeed;
+        a.StrategicAlignment = dto.StrategicAlignment;
+
+        // NPV inputs
+        a.InitialCost = dto.InitialCost;
+        a.AnnualBenefit = dto.AnnualBenefit;
+        a.ProjectYears = dto.ProjectYears;
+        a.DiscountRate = dto.DiscountRate;
+
+        // calculated NPV
+        a.CalculatedNPV = CalculateNpv(dto.InitialCost, dto.AnnualBenefit, dto.ProjectYears, dto.DiscountRate);
+
+        // assessor
+        a.AssessedBy = dto.AssessedBy;
+        a.AssessedAtUtc = DateTime.UtcNow;
 
         // Score (0..100)
-        assessment.WeightedScore = ScoringService.CalculateScore(demand, assessment);
+        a.WeightedScore = ScoringService.CalculateScore(demand, a);
 
         if (demand.Assessment is null)
-            _db.Assessments.Add(assessment);
+            _db.Assessments.Add(a);
 
         // Business rule: once assessed, move to UnderReview (if still in Intake)
         if (demand.Status == DemandStatus.Intake)
@@ -66,5 +66,43 @@ public class AssessmentsController : ControllerBase
 
         await _db.SaveChangesAsync();
         return NoContent();
+    }
+
+    private static AssessmentDto ToDto(Assessment a) => new(
+        a.Id,
+        a.DemandRequestId,
+        a.BusinessValue,
+        a.CostImpact,
+        a.Risk,
+        a.ResourceNeed,
+        a.StrategicAlignment,
+        a.WeightedScore,
+        a.InitialCost,
+        a.AnnualBenefit,
+        a.ProjectYears,
+        a.DiscountRate,
+        a.CalculatedNPV,
+        a.AssessedBy,
+        a.AssessedAtUtc
+    );
+
+    /// <summary>
+    /// NPV = -InitialCost + Σ(AnnualBenefit / (1+r)^t) for t=1..years
+    /// dto.DiscountRate is stored as percent (e.g. 10 = 10%)
+    /// </summary>
+    private static decimal CalculateNpv(decimal initialCost, decimal annualBenefit, int years, decimal discountRatePercent)
+    {
+        if (years <= 0) return Math.Round(-initialCost, 2);
+
+        var r = discountRatePercent / 100m; // convert percent to fraction
+        decimal npv = -initialCost;
+
+        for (var t = 1; t <= years; t++)
+        {
+            var denom = (decimal)Math.Pow((double)(1m + r), t);
+            npv += annualBenefit / denom;
+        }
+
+        return Math.Round(npv, 2);
     }
 }

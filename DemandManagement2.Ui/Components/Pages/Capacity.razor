@@ -1,0 +1,557 @@
+@page "/capacity"
+@rendermode InteractiveServer
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+
+<div class="dm-page">
+    <div class="dm-page__header">
+        <div>
+            <div class="dm-pill">Resources</div>
+            <h1 class="dm-title">Capacity Planning</h1>
+            <p class="dm-subtitle">Manage resources and track capacity allocation across demands.</p>
+        </div>
+        <div class="dm-actions">
+            <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+            <a href="/demands" class="dm-btn dm-btn--ghost">Demands</a>
+            <button class="dm-btn dm-btn--primary" @onclick="() => _showAddResource = true">+ Add Resource</button>
+        </div>
+    </div>
+
+    @if (_summary is null)
+    {
+        <div class="dm-loading">Loading capacity data...</div>
+    }
+    else
+    {
+        <!-- KPI Cards -->
+        <div class="dm-grid dm-grid--4 dm-gap">
+            <div class="dm-kpi-card">
+                <div class="dm-kpi-label">Total Resources</div>
+                <div class="dm-kpi-value">@_summary.TotalResources</div>
+            </div>
+            <div class="dm-kpi-card">
+                <div class="dm-kpi-label">Total Capacity (hrs)</div>
+                <div class="dm-kpi-value">@_summary.TotalCapacityHours</div>
+            </div>
+            <div class="dm-kpi-card dm-kpi-card--warning">
+                <div class="dm-kpi-label">Allocated (hrs)</div>
+                <div class="dm-kpi-value">@_summary.AllocatedHours</div>
+            </div>
+            <div class="dm-kpi-card dm-kpi-card--success">
+                <div class="dm-kpi-label">Available (hrs)</div>
+                <div class="dm-kpi-value">@_summary.AvailableHours</div>
+            </div>
+        </div>
+
+        <div class="dm-grid dm-grid--2 dm-gap dm-mt">
+            <!-- Department Breakdown -->
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div>
+                        <div class="dm-card__title">Capacity by Department</div>
+                        <div class="dm-card__hint">Current month allocation breakdown</div>
+                    </div>
+                </div>
+
+                @if (_summary.ByDepartment.Count == 0)
+                {
+                    <div class="dm-empty">No departments found.</div>
+                }
+                else
+                {
+                    <div class="dm-dept-list">
+                        @foreach (var dept in _summary.ByDepartment)
+                        {
+                            var pct = dept.CapacityHours > 0 ? (int)((double)dept.AllocatedHours / dept.CapacityHours * 100) : 0;
+                            <div class="dm-dept-row">
+                                <div class="dm-dept-name">@dept.Department</div>
+                                <div class="dm-dept-bar">
+                                    <div class="dm-dept-bar__fill" style="width: @pct%"></div>
+                                </div>
+                                <div class="dm-dept-stats">
+                                    <span>@dept.AllocatedHours / @dept.CapacityHours hrs</span>
+                                    <span class="dm-pct">@pct%</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Resources List -->
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div>
+                        <div class="dm-card__title">Resources</div>
+                        <div class="dm-card__hint">Team members and their capacity</div>
+                    </div>
+                    <span class="dm-badge dm-badge--info">@(_resources?.Count ?? 0) Active</span>
+                </div>
+
+                @if (_resources is null || _resources.Count == 0)
+                {
+                    <div class="dm-empty">No resources added yet.</div>
+                }
+                else
+                {
+                    <div class="dm-resource-list">
+                        @foreach (var r in _resources)
+                        {
+                            <div class="dm-resource-row">
+                                <div class="dm-resource-info">
+                                    <div class="dm-resource-name">@r.Name</div>
+                                    <div class="dm-resource-role">@r.Role - @r.Department</div>
+                                </div>
+                                <div class="dm-resource-cap">
+                                    <span class="dm-pillSmall">@r.CapacityHoursPerMonth hrs/mo</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Allocations -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Current Allocations</div>
+                    <div class="dm-card__hint">Resource assignments to demands this month</div>
+                </div>
+                <button class="dm-btn dm-btn--ghost" @onclick="() => _showAddAllocation = true">+ Allocate</button>
+            </div>
+
+            @if (_allocations is null || _allocations.Count == 0)
+            {
+                <div class="dm-empty">No allocations for this period.</div>
+            }
+            else
+            {
+                <div class="dm-alloc-list">
+                    @foreach (var a in _allocations)
+                    {
+                        <div class="dm-alloc-row">
+                            <div class="dm-alloc-resource">@a.ResourceName</div>
+                            <div class="dm-alloc-demand">@a.DemandTitle</div>
+                            <div class="dm-alloc-hours">@a.AllocatedHours hrs</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Add Resource Modal -->
+    @if (_showAddResource)
+    {
+        <div class="dm-modal-overlay" @onclick="() => _showAddResource = false">
+            <div class="dm-modal" @onclick:stopPropagation="true">
+                <div class="dm-modal__header">
+                    <div class="dm-modal__title">Add Resource</div>
+                    <button class="dm-modal__close" @onclick="() => _showAddResource = false">&times;</button>
+                </div>
+                <div class="dm-form">
+                    <div class="dm-form-row">
+                        <label>Name</label>
+                        <input class="dm-input" @bind="_newResource.Name" placeholder="Full name" />
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Role</label>
+                        <input class="dm-input" @bind="_newResource.Role" placeholder="e.g. Developer, Analyst" />
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Department</label>
+                        <input class="dm-input" @bind="_newResource.Department" placeholder="e.g. IT, Operations" />
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Capacity (hrs/month)</label>
+                        <input class="dm-input" type="number" @bind="_newResource.CapacityHoursPerMonth" />
+                    </div>
+                    <div class="dm-form-actions">
+                        <button class="dm-btn dm-btn--primary" @onclick="AddResource">Save Resource</button>
+                        <span class="dm-msg">@_msgR</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Add Allocation Modal -->
+    @if (_showAddAllocation)
+    {
+        <div class="dm-modal-overlay" @onclick="() => _showAddAllocation = false">
+            <div class="dm-modal" @onclick:stopPropagation="true">
+                <div class="dm-modal__header">
+                    <div class="dm-modal__title">Allocate Resource</div>
+                    <button class="dm-modal__close" @onclick="() => _showAddAllocation = false">&times;</button>
+                </div>
+                <div class="dm-form">
+                    <div class="dm-form-row">
+                        <label>Resource</label>
+                        <select class="dm-input dm-select" @bind="_newAllocation.ResourceId">
+                            <option value="@Guid.Empty">-- Select Resource --</option>
+                            @if (_resources is not null)
+                            {
+                                @foreach (var r in _resources)
+                                {
+                                    <option value="@r.Id">@r.Name (@r.Role)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Demand</label>
+                        <select class="dm-input dm-select" @bind="_newAllocation.DemandRequestId">
+                            <option value="@Guid.Empty">-- Select Demand --</option>
+                            @if (_demands is not null)
+                            {
+                                @foreach (var d in _demands)
+                                {
+                                    <option value="@d.Id">@d.Title</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Hours</label>
+                        <input class="dm-input" type="number" @bind="_newAllocation.AllocatedHours" />
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Month</label>
+                        <input class="dm-input" type="number" min="1" max="12" @bind="_newAllocation.Month" />
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Year</label>
+                        <input class="dm-input" type="number" @bind="_newAllocation.Year" />
+                    </div>
+                    <div class="dm-form-actions">
+                        <button class="dm-btn dm-btn--primary" @onclick="AddAllocation">Save Allocation</button>
+                        <span class="dm-msg">@_msgA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private DemandManagement2.Ui.Services.CapacitySummary? _summary;
+    private List<DemandManagement2.Ui.Services.ResourceItem>? _resources;
+    private List<DemandManagement2.Ui.Services.AllocationItem>? _allocations;
+    private List<DemandManagement2.Ui.Services.DemandListItem>? _demands;
+
+    private bool _showAddResource;
+    private bool _showAddAllocation;
+    private DemandManagement2.Ui.Services.CreateResourceRequest _newResource = new();
+    private DemandManagement2.Ui.Services.CreateAllocationRequest _newAllocation = new()
+    {
+        Month = DateTime.Now.Month,
+        Year = DateTime.Now.Year
+    };
+    private string _msgR = "";
+    private string _msgA = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _summary = await Api.GetCapacitySummary();
+        _resources = await Api.GetResources();
+        _allocations = await Api.GetAllocations();
+        _demands = await Api.GetDemands();
+    }
+
+    private async Task AddResource()
+    {
+        try
+        {
+            _msgR = "Saving...";
+            StateHasChanged();
+            await Api.CreateResource(_newResource);
+            _newResource = new();
+            _showAddResource = false;
+            await LoadData();
+            _msgR = "";
+        }
+        catch (Exception ex)
+        {
+            _msgR = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task AddAllocation()
+    {
+        try
+        {
+            _msgA = "Saving...";
+            StateHasChanged();
+            await Api.CreateAllocation(_newAllocation);
+            _newAllocation = new() { Month = DateTime.Now.Month, Year = DateTime.Now.Year };
+            _showAddAllocation = false;
+            await LoadData();
+            _msgA = "";
+        }
+        catch (Exception ex)
+        {
+            _msgA = $"Error: {ex.Message}";
+        }
+    }
+}
+
+<style>
+:root{
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-success: #22c55e;
+  --dm-warning: #f59e0b;
+  --dm-info: #06b6d4;
+}
+
+.dm-page{ max-width: 1200px; }
+
+.dm-page__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 20px;
+  flex-wrap: wrap;
+}
+
+.dm-title{
+  margin: 8px 0 6px;
+  font-size: 28px;
+  letter-spacing: -.02em;
+  color: var(--dm-text);
+}
+.dm-subtitle{
+  margin: 0;
+  color: var(--dm-muted);
+  line-height: 1.6;
+}
+
+.dm-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+.dm-pill{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.06);
+  color: var(--dm-muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dm-grid{ display:grid; }
+.dm-grid--2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dm-grid--4{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dm-gap{ gap: 16px; }
+.dm-mt{ margin-top: 16px; }
+
+.dm-kpi-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+}
+.dm-kpi-card--success{ border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.08); }
+.dm-kpi-card--warning{ border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.08); }
+.dm-kpi-label{ font-size: 12px; color: var(--dm-muted); text-transform: uppercase; letter-spacing: .05em; }
+.dm-kpi-value{ font-size: 32px; font-weight: 950; color: var(--dm-text); margin-top: 6px; }
+
+.dm-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.dm-card__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.dm-card__title{ font-weight: 900; color: var(--dm-text); }
+.dm-card__hint{ font-size: 12.5px; color: var(--dm-faint); margin-top: 2px; }
+
+.dm-badge{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--dm-border);
+}
+.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+
+.dm-btn{
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+.dm-loading, .dm-empty{
+  padding: 30px;
+  text-align: center;
+  color: var(--dm-muted);
+}
+
+.dm-dept-list{ display: flex; flex-direction: column; gap: 14px; }
+.dm-dept-row{ }
+.dm-dept-name{ font-weight: 700; color: var(--dm-text); margin-bottom: 6px; }
+.dm-dept-bar{ height: 8px; background: rgba(255,255,255,.1); border-radius: 4px; overflow: hidden; }
+.dm-dept-bar__fill{ height: 100%; background: linear-gradient(90deg, var(--dm-primary), var(--dm-info)); border-radius: 4px; transition: width .3s ease; }
+.dm-dept-stats{ display: flex; justify-content: space-between; font-size: 12px; color: var(--dm-muted); margin-top: 4px; }
+.dm-pct{ font-weight: 800; color: var(--dm-info); }
+
+.dm-resource-list{ display: flex; flex-direction: column; gap: 10px; }
+.dm-resource-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.15);
+  border: 1px solid var(--dm-border);
+}
+.dm-resource-name{ font-weight: 800; color: var(--dm-text); }
+.dm-resource-role{ font-size: 12px; color: var(--dm-muted); margin-top: 2px; }
+
+.dm-alloc-list{ display: flex; flex-direction: column; gap: 8px; }
+.dm-alloc-row{
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.15);
+  border: 1px solid var(--dm-border);
+  align-items: center;
+}
+.dm-alloc-resource{ font-weight: 800; color: var(--dm-text); }
+.dm-alloc-demand{ color: var(--dm-muted); }
+.dm-alloc-hours{ font-weight: 800; color: var(--dm-info); }
+
+.dm-pillSmall{
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--dm-text);
+}
+
+/* Modal */
+.dm-modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.dm-modal{
+  background: #1a1a2e;
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 20px;
+  min-width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 20px 50px rgba(0,0,0,.5);
+}
+.dm-modal__header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.dm-modal__title{ font-weight: 900; font-size: 18px; color: var(--dm-text); }
+.dm-modal__close{
+  background: none;
+  border: none;
+  color: var(--dm-muted);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+.dm-modal__close:hover{ color: var(--dm-text); }
+
+.dm-form{ display: flex; flex-direction: column; gap: 12px; }
+.dm-form-row{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dm-form-row label{
+  font-size: 13px;
+  color: var(--dm-muted);
+  font-weight: 600;
+}
+
+.dm-input{
+  background: rgba(0,0,0,.25);
+  border: 1px solid var(--dm-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--dm-text);
+  font-size: 14px;
+  transition: border-color .15s ease;
+}
+.dm-input:focus{
+  outline: none;
+  border-color: var(--dm-primary);
+}
+.dm-select{ cursor: pointer; }
+
+.dm-form-actions{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.dm-msg{
+  font-size: 13px;
+  color: var(--dm-success);
+}
+
+@@media (max-width: 900px){
+  .dm-grid--4{ grid-template-columns: repeat(2, 1fr); }
+}
+@@media (max-width: 700px){
+  .dm-grid--2, .dm-grid--4{ grid-template-columns: 1fr; }
+  .dm-page__header{ flex-direction: column; }
+  .dm-alloc-row{ grid-template-columns: 1fr; }
+}
+</style>

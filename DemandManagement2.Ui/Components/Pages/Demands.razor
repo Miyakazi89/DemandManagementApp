@@ -1,34 +1,75 @@
 @page "/demands"
+@rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 
-<h3>Demand Requests</h3>
+<div class="dm-page">
+    <div class="dm-page__header">
+        <div>
+            <div class="dm-pill">Demands</div>
+            <h1 class="dm-title">Demand Requests</h1>
+            <p class="dm-subtitle">View and manage all demand requests in the system.</p>
+        </div>
+        <div class="dm-actions">
+            <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+            <a href="/prioritization" class="dm-btn dm-btn--ghost">Prioritization</a>
+            <a href="/demands/new" class="dm-btn dm-btn--primary">+ New Request</a>
+        </div>
+    </div>
 
-<p>
-    <a href="/demands/new">Submit New Request</a> |
-    <a href="/prioritization">Prioritization</a> |
-    <a href="/dashboard">Dashboard</a>
-</p>
+    <div class="dm-card">
+        <div class="dm-card__header">
+            <div>
+                <div class="dm-card__title">All Requests</div>
+                <div class="dm-card__hint">Click on a demand to view details</div>
+            </div>
+            <span class="dm-badge dm-badge--info">@(_items?.Count ?? 0) Total</span>
+        </div>
 
-@if (_items is null)
-{
-    <p>Loading...</p>
-}
-else if (_items.Count == 0)
-{
-    <p>No demands found. Submit one to get started.</p>
-}
-else
-{
-    <ul>
-        @foreach (var d in _items)
+        @if (_items is null)
         {
-            <li>
-                <a href="@($"/demands/{d.Id}")">@d.Title</a>
-                <small> — @d.Status | Score: @(d.WeightedScore?.ToString() ?? "N/A")</small>
-            </li>
+            <div class="dm-loading">Loading...</div>
         }
-    </ul>
-}
+        else if (_items.Count == 0)
+        {
+            <div class="dm-empty">
+                <div class="dm-empty__text">No demands found.</div>
+                <a href="/demands/new" class="dm-btn dm-btn--primary">Submit your first request</a>
+            </div>
+        }
+        else
+        {
+            <div class="dm-demandlist">
+                @foreach (var d in _items)
+                {
+                    <a href="@($"/demands/{d.Id}")" class="dm-demand-row">
+                        <div class="dm-demand-row__main">
+                            <div class="dm-demand-row__title">@d.Title</div>
+                            <div class="dm-demand-row__sub">
+                                <span>@d.BusinessUnit</span>
+                                <span class="dm-sep">|</span>
+                                <span>@d.RequestedBy</span>
+                                <span class="dm-sep">|</span>
+                                <span>@d.Type</span>
+                            </div>
+                        </div>
+                        <div class="dm-demand-row__meta">
+                            <span class="dm-pillSmall dm-pillSmall--status">@d.Status</span>
+                            <span class="dm-pillSmall">Urg @d.Urgency</span>
+                            @if (d.WeightedScore is not null)
+                            {
+                                <span class="dm-pillSmall dm-pillSmall--score">Score @d.WeightedScore</span>
+                            }
+                            else
+                            {
+                                <span class="dm-pillSmall dm-pillSmall--pending">Not Assessed</span>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private List<DemandManagement2.Ui.Services.DemandListItem>? _items;
@@ -37,46 +78,197 @@ else
     {
         _items = await Api.GetDemands();
     }
-    @code {
-    private static string TypeText(int type) => type switch
-    {
-        0 => "Project",
-        1 => "Enhancement",
-        2 => "Fix",
-        3 => "Process Improvement",
-        4 => "Support",
-        _ => $"Type {type}"
-    };
-
-    private static string StatusText(int status) => status switch
-    {
-        0 => "Intake",
-        1 => "Assessment",
-        2 => "Approval",
-        3 => "Approved",
-        4 => "Rejected",
-        5 => "In Progress",
-        6 => "Completed",
-        _ => $"Status {status}"
-    };
-
-    private static string StatusBadgeClass(int status) => status switch
-    {
-        0 => "dm-badge dm-badge--muted",   // Intake
-        1 => "dm-badge dm-badge--warn",    // Assessment
-        2 => "dm-badge dm-badge--info",    // Approval
-        3 => "dm-badge dm-badge--success", // Approved
-        4 => "dm-badge dm-badge--danger",  // Rejected
-        _ => "dm-badge dm-badge--ghost"
-    };
-
-    private static string UrgencyPillClass(int urgency) => urgency switch
-    {
-        >= 5 => "dm-pillSmall dm-pillSmall--danger",
-        4 => "dm-pillSmall dm-pillSmall--warn",
-        _ => "dm-pillSmall"
-    };
 }
 
+<style>
+:root{
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-info: #06b6d4;
 }
-``
+
+.dm-page{ max-width: 1100px; }
+
+.dm-page__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 20px;
+  flex-wrap: wrap;
+}
+
+.dm-title{
+  margin: 8px 0 6px;
+  font-size: 28px;
+  letter-spacing: -.02em;
+  color: var(--dm-text);
+}
+.dm-subtitle{
+  margin: 0;
+  color: var(--dm-muted);
+  line-height: 1.6;
+}
+
+.dm-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+.dm-pill{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.06);
+  color: var(--dm-muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dm-badge{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--dm-border);
+}
+.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+
+.dm-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.dm-card__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.dm-card__title{ font-weight: 900; color: var(--dm-text); }
+.dm-card__hint{ font-size: 12.5px; color: var(--dm-faint); margin-top: 2px; }
+
+.dm-btn{
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+.dm-loading{
+  padding: 40px;
+  text-align: center;
+  color: var(--dm-muted);
+}
+
+.dm-empty{
+  padding: 40px;
+  text-align: center;
+}
+.dm-empty__text{
+  color: var(--dm-muted);
+  margin-bottom: 16px;
+}
+
+.dm-demandlist{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dm-demand-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--dm-border);
+  background: rgba(0,0,0,.14);
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+.dm-demand-row:hover{
+  background: rgba(255,255,255,.08);
+  transform: translateX(4px);
+}
+
+.dm-demand-row__title{
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--dm-text);
+}
+.dm-demand-row__sub{
+  color: var(--dm-muted);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+.dm-sep{
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.dm-demand-row__meta{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dm-pillSmall{
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--dm-text);
+  white-space: nowrap;
+}
+.dm-pillSmall--status{
+  background: rgba(37,99,235,.15);
+  border-color: rgba(37,99,235,.3);
+  color: #93c5fd;
+}
+.dm-pillSmall--score{
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.25);
+  color: #bbf7d0;
+}
+.dm-pillSmall--pending{
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.1);
+  color: var(--dm-faint);
+}
+
+@@media (max-width: 700px){
+  .dm-page__header{ flex-direction: column; }
+  .dm-demand-row{ flex-direction: column; align-items: flex-start; }
+  .dm-demand-row__meta{ margin-top: 10px; }
+}
+</style>

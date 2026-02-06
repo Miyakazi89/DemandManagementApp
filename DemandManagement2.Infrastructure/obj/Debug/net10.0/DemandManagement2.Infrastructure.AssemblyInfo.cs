@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DemandManagement2.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+50733828282836f6446cf96f28b468af0a0c83c3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce3e24d4af45c0184f404fe052d1d727000e27cc")]
 [assembly: System.Reflection.AssemblyProductAttribute("DemandManagement2.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DemandManagement2.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

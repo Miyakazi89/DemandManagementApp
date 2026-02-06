@@ -1,56 +1,270 @@
 @page "/demands/new"
+@rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 @inject NavigationManager Nav
 
-<h3>Submit New Demand Request</h3>
+<div class="dm-page">
+    <div class="dm-page__header">
+        <div>
+            <div class="dm-pill">New Request</div>
+            <h1 class="dm-title">Submit New Demand</h1>
+            <p class="dm-subtitle">Fill out the form below to submit a new demand request for review.</p>
+        </div>
+        <div class="dm-actions">
+            <a href="/demands" class="dm-btn dm-btn--ghost">Back to List</a>
+            <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+        </div>
+    </div>
 
-<div style="max-width:600px;">
-    <label>Title</label><br />
-    <input class="form-control" @bind="_model.Title" /><br />
+    <div class="dm-card">
+        <div class="dm-card__header">
+            <div>
+                <div class="dm-card__title">Request Details</div>
+                <div class="dm-card__hint">All fields are required</div>
+            </div>
+        </div>
 
-    <label>Problem Statement</label><br />
-    <textarea class="form-control" @bind="_model.ProblemStatement" rows="4"></textarea><br />
+        <div class="dm-form">
+            <div class="dm-form-row dm-form-row--full">
+                <label for="title">Title</label>
+                <input id="title" class="dm-input" @bind="_model.Title" placeholder="Brief title for this request" />
+            </div>
 
-    <label>Type</label><br />
-    <select class="form-select" @bind="_model.Type">
-        <option>Project</option>
-        <option>Enhancement</option>
-        <option>Service</option>
-        <option>ResourceRequest</option>
-    </select><br />
+            <div class="dm-form-row dm-form-row--full">
+                <label for="problemStatement">Problem Statement</label>
+                <textarea id="problemStatement" class="dm-input dm-textarea" @bind="_model.ProblemStatement" rows="4" placeholder="Describe the problem or need in detail..."></textarea>
+            </div>
 
-    <label>Business Unit</label><br />
-    <input class="form-control" @bind="_model.BusinessUnit" /><br />
+            <div class="dm-form-grid">
+                <div class="dm-form-row">
+                    <label for="type">Type</label>
+                    <select id="type" class="dm-input dm-select" @bind="_model.Type">
+                        <option value="@DemandManagement2.Ui.Services.DemandType.Project">Project</option>
+                        <option value="@DemandManagement2.Ui.Services.DemandType.Enhancement">Enhancement</option>
+                        <option value="@DemandManagement2.Ui.Services.DemandType.Service">Service</option>
+                        <option value="@DemandManagement2.Ui.Services.DemandType.ResourceRequest">Resource Request</option>
+                    </select>
+                </div>
 
-    <label>Requested By</label><br />
-    <input class="form-control" @bind="_model.RequestedBy" /><br />
+                <div class="dm-form-row">
+                    <label for="businessUnit">Business Unit</label>
+                    <input id="businessUnit" class="dm-input" @bind="_model.BusinessUnit" placeholder="e.g., Finance, IT, Marketing" />
+                </div>
 
-    <label>Urgency (1–5)</label><br />
-    <input class="form-control" type="number" min="1" max="5" @bind="_model.Urgency" /><br />
+                <div class="dm-form-row">
+                    <label for="requestedBy">Requested By</label>
+                    <input id="requestedBy" class="dm-input" @bind="_model.RequestedBy" placeholder="Your name" />
+                </div>
 
-    <label>Estimated Effort (1–5)</label><br />
-    <input class="form-control" type="number" min="1" max="5" @bind="_model.EstimatedEffort" /><br />
+                <div class="dm-form-row">
+                    <label for="urgency">Urgency (1-5)</label>
+                    <input id="urgency" class="dm-input" type="number" min="1" max="5" @bind="_model.Urgency" />
+                    <span class="dm-form-hint">1 = Low, 5 = Critical</span>
+                </div>
 
-    <button class="btn btn-primary" @onclick="Submit">Submit</button>
-    <span style="margin-left:10px;">@_message</span>
+                <div class="dm-form-row">
+                    <label for="estimatedEffort">Estimated Effort (1-5)</label>
+                    <input id="estimatedEffort" class="dm-input" type="number" min="1" max="5" @bind="_model.EstimatedEffort" />
+                    <span class="dm-form-hint">1 = Small, 5 = Large</span>
+                </div>
+            </div>
+
+            <div class="dm-form-actions">
+                <button class="dm-btn dm-btn--primary dm-btn--lg" @onclick="Submit">Submit Request</button>
+                <span class="dm-msg @(_message.Contains("failed") ? "dm-msg--error" : "")">@_message</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 @code {
     private DemandManagement2.Ui.Services.CreateDemandRequest _model = new();
     private string _message = "";
 
-private async Task Submit()
-{
-    try
+    private async Task Submit()
     {
-        _message = "Submitting...";
-        await Api.CreateDemand(_model);
-        _message = "Submitted!";
-        Nav.NavigateTo("/demands");
-    }
-    catch (Exception ex)
-    {
-        _message = $"Submit failed: {ex.Message}";
+        try
+        {
+            _message = "Submitting...";
+            StateHasChanged();
+
+            await Api.CreateDemand(_model);
+            _message = "Submitted!";
+            Nav.NavigateTo("/demands");
+        }
+        catch (Exception ex)
+        {
+            _message = $"Submit failed: {ex.Message}";
+        }
     }
 }
+
+<style>
+:root{
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-success: #22c55e;
 }
+
+.dm-page{ max-width: 800px; }
+
+.dm-page__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 20px;
+  flex-wrap: wrap;
+}
+
+.dm-title{
+  margin: 8px 0 6px;
+  font-size: 28px;
+  letter-spacing: -.02em;
+  color: var(--dm-text);
+}
+.dm-subtitle{
+  margin: 0;
+  color: var(--dm-muted);
+  line-height: 1.6;
+}
+
+.dm-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+.dm-pill{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.06);
+  color: var(--dm-muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dm-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.dm-card__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.dm-card__title{ font-weight: 900; color: var(--dm-text); font-size: 18px; }
+.dm-card__hint{ font-size: 12.5px; color: var(--dm-faint); margin-top: 2px; }
+
+.dm-btn{
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-btn--lg{
+  padding: 12px 24px;
+  font-size: 15px;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+.dm-form{ display: flex; flex-direction: column; gap: 16px; }
+
+.dm-form-grid{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.dm-form-row{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dm-form-row--full{
+  grid-column: 1 / -1;
+}
+.dm-form-row label{
+  font-size: 13px;
+  color: var(--dm-muted);
+  font-weight: 600;
+}
+
+.dm-form-hint{
+  font-size: 11px;
+  color: var(--dm-faint);
+  margin-top: 2px;
+}
+
+.dm-input{
+  background: rgba(0,0,0,.25);
+  border: 1px solid var(--dm-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--dm-text);
+  font-size: 14px;
+  transition: border-color .15s ease;
+}
+.dm-input:focus{
+  outline: none;
+  border-color: var(--dm-primary);
+}
+.dm-input::placeholder{
+  color: var(--dm-faint);
+}
+
+.dm-select{
+  cursor: pointer;
+}
+
+.dm-textarea{
+  resize: vertical;
+  min-height: 100px;
+}
+
+.dm-form-actions{
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--dm-border);
+}
+
+.dm-msg{
+  font-size: 14px;
+  color: var(--dm-success);
+  font-weight: 600;
+}
+.dm-msg--error{
+  color: #f87171;
+}
+
+@@media (max-width: 600px){
+  .dm-page__header{ flex-direction: column; }
+  .dm-form-grid{ grid-template-columns: 1fr; }
+}
+</style>

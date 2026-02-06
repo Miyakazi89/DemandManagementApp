@@ -39,4 +39,6 @@ public class DemandRequest
     // Navigation
     public Assessment? Assessment { get; set; }
     public ApprovalDecision? Approval { get; set; }
+    public ICollection<DecisionNote> DecisionNotes { get; set; } = new List<DecisionNote>();
+    public ICollection<ResourceAllocation> ResourceAllocations { get; set; } = new List<ResourceAllocation>();
 }

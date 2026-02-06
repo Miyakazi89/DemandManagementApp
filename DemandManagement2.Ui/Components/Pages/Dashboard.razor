@@ -1,4 +1,5 @@
 @page "/dashboard"
+@rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 
 <PageTitle>Dashboard</PageTitle>
@@ -61,7 +62,7 @@
             <div class="dm-kpi dm-card">
                 <div class="dm-kpi__label">Assessment</div>
                 <div class="dm-kpi__value">@_kpiAssessment</div>
-                <div class="dm-kpi__hint">Waiting to be scored</div>
+                <div class="dm-kpi__hint">Demands with scores</div>
             </div>
 
             <div class="dm-kpi dm-card">
@@ -131,7 +132,7 @@
                     <div class="dm-toplist">
                         @foreach (var d in _top)
                         {
-                            <div class="dm-toplist__row">
+                            <a href="@($"/demands/{d.Id}")" class="dm-toplist__row dm-toplist__row--link">
                                 <div class="dm-toplist__main">
                                     <div class="dm-toplist__title">@d.Title</div>
                                     <div class="dm-toplist__sub">@d.BusinessUnit • @d.RequestedBy</div>
@@ -140,7 +141,7 @@
                                     <span class="dm-pillSmall">Urg @d.Urgency</span>
                                     <span class="dm-pillSmall dm-pillSmall--score">Score @(d.WeightedScore ?? 0)</span>
                                 </div>
-                            </div>
+                            </a>
                         }
                     </div>
                 }
@@ -182,6 +183,7 @@
     private int _kpiScored;
 
     private List<DemandManagement2.Ui.Services.DemandListItem>? _top = new();
+    private List<DemandManagement2.Ui.Services.DemandListItem>? _allDemands = new();
 
     protected override async Task OnInitializedAsync() => await Load();
 
@@ -205,15 +207,19 @@
             // Since summary is object, compute KPIs safely using existing endpoints.
             // This guarantees the dashboard still works even if summary schema changes.
             var all = await Api.GetDemands();
+            _allDemands = all;
 
             _kpiTotal = all.Count;
             _kpiHighUrgency = all.Count(d => d.Urgency >= 4);
             _kpiScored = all.Count(d => d.WeightedScore is not null);
 
-            // NOTE: If your Status is an enum instead of string, tell me and I’ll adjust these comparisons.
+            // Status mappings:
+            // - Intake = new demands (Intake status)
+            // - Assessment = demands that have been assessed (have a WeightedScore)
+            // - Awaiting Approval = demands not yet approved (UnderReview status)
             _kpiIntake = all.Count(d => string.Equals(d.Status, "Intake", StringComparison.OrdinalIgnoreCase));
-            _kpiAssessment = all.Count(d => string.Equals(d.Status, "Assessment", StringComparison.OrdinalIgnoreCase));
-            _kpiApproval = all.Count(d => string.Equals(d.Status, "Approval", StringComparison.OrdinalIgnoreCase));
+            _kpiAssessment = all.Count(d => d.WeightedScore is not null); // Demands that have been assessed
+            _kpiApproval = all.Count(d => string.Equals(d.Status, "UnderReview", StringComparison.OrdinalIgnoreCase)); // UnderReview items need approval
 
             // Optional: top priorities list (if your prioritization endpoint exists)
             try
@@ -376,6 +382,16 @@
 .dm-toplist__title{ font-weight: 900; }
 .dm-toplist__sub{ color: var(--dm-muted); font-size: 12.5px; margin-top: 2px; }
 .dm-toplist__meta{ display:flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.dm-toplist__row--link{
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+.dm-toplist__row--link:hover{
+  background: rgba(255,255,255,.08);
+  transform: translateX(4px);
+}
 
 .dm-pillSmall{
   border: 1px solid var(--dm-border);
@@ -390,6 +406,11 @@
   background: rgba(34,197,94,.12);
   border-color: rgba(34,197,94,.25);
   color: #bbf7d0;
+}
+.dm-pillSmall--status{
+  background: rgba(37,99,235,.15);
+  border-color: rgba(37,99,235,.3);
+  color: #93c5fd;
 }
 
 .dm-linkInline{

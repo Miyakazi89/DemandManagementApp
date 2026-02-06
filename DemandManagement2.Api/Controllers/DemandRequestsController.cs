@@ -1,6 +1,6 @@
 using DemandManagement2.Api.Dtos;
-using DemandManagement2.Infrastructure.Data;
 using DemandManagement2.Domain.Entities;
+using DemandManagement2.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,6 +54,8 @@ public class DemandsController : ControllerBase
 
         if (d is null) return NotFound();
 
+        var a = d.Assessment;
+
         var dto = new DemandDetailsDto(
             d.Id,
             d.Title,
@@ -64,18 +66,23 @@ public class DemandsController : ControllerBase
             d.RequestedBy,
             d.Urgency,
             d.EstimatedEffort,
-            d.Assessment?.WeightedScore,
-            d.Assessment is null ? null : new AssessmentDto(
-                d.Assessment.Id,
-                d.Assessment.DemandRequestId,
-                d.Assessment.BusinessValue,
-                d.Assessment.CostImpact,
-                d.Assessment.Risk,
-                d.Assessment.ResourceNeed,
-                d.Assessment.StrategicAlignment,
-                d.Assessment.WeightedScore,
-                d.Assessment.AssessedBy,
-                d.Assessment.AssessedAtUtc
+            a?.WeightedScore,
+            a is null ? null : new AssessmentDto(
+                a.Id,
+                a.DemandRequestId,
+                a.BusinessValue,
+                a.CostImpact,
+                a.Risk,
+                a.ResourceNeed,
+                a.StrategicAlignment,
+                a.WeightedScore,
+                a.InitialCost,
+                a.AnnualBenefit,
+                a.ProjectYears,
+                a.DiscountRate,
+                a.CalculatedNPV,
+                a.AssessedBy,
+                a.AssessedAtUtc
             ),
             d.Approval is null ? null : new ApprovalDto(
                 d.Approval.Id,

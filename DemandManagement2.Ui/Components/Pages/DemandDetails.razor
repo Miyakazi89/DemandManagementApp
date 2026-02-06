@@ -1,71 +1,290 @@
 @page "/demands/{Id:guid}"
+@rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject NavigationManager Nav
 
-<h3>Demand Details</h3>
-
-@if (_demand is null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <div style="max-width:850px;">
-        <h4>@_demand.Title</h4>
-        <p><b>Status:</b> @_demand.Status | <b>Score:</b> @(_demand.WeightedScore?.ToString() ?? "N/A")</p>
-        <p><b>Business Unit:</b> @_demand.BusinessUnit</p>
-        <p><b>Requested By:</b> @_demand.RequestedBy</p>
-        <p><b>Problem Statement:</b><br />@_demand.ProblemStatement</p>
-
-        <hr />
-        <h4>Assessment</h4>
-
-        <div style="max-width:450px;">
-            <label>Business Value</label>
-            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.BusinessValue" />
-
-            <label>Cost Impact</label>
-            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.CostImpact" />
-
-            <label>Risk</label>
-            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.Risk" />
-
-            <label>Resource Need</label>
-            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.ResourceNeed" />
-
-            <label>Strategic Alignment</label>
-            <input class="form-control" type="number" min="1" max="5" @bind="_assessment.StrategicAlignment" />
-
-            <label>Assessed By</label>
-            <input class="form-control" @bind="_assessment.AssessedBy" />
-            <br />
-
-            <button class="btn btn-secondary" @onclick="SaveAssessment">Save Assessment</button>
-            <span style="margin-left:10px;">@_msgA</span>
+<div class="dm-page">
+    @if (_demand is null)
+    {
+        <div class="dm-loading">Loading...</div>
+    }
+    else
+    {
+        <div class="dm-page__header">
+            <div>
+                <div class="dm-pill">Details</div>
+                <h1 class="dm-title">@_demand.Title</h1>
+                <div class="dm-meta-row">
+                    <span class="dm-pillSmall dm-pillSmall--status">@_demand.Status</span>
+                    <span class="dm-pillSmall">@_demand.Type</span>
+                    @if (_demand.WeightedScore is not null)
+                    {
+                        <span class="dm-pillSmall dm-pillSmall--score">Score @_demand.WeightedScore</span>
+                    }
+                </div>
+            </div>
+            <div class="dm-actions">
+                <a href="/demands" class="dm-btn dm-btn--ghost">Back to List</a>
+                <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+            </div>
         </div>
 
-        <hr />
-        <h4>Approval</h4>
+        <div class="dm-grid dm-grid--2 dm-gap">
+            <!-- Left Column: Demand Info -->
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div>
+                        <div class="dm-card__title">Request Information</div>
+                        <div class="dm-card__hint">Details about this demand request</div>
+                    </div>
+                </div>
 
-        <div style="max-width:450px;">
-            <label>Decision</label>
-            <select class="form-select" @bind="_approval.Status">
-                <option>Approved</option>
-                <option>Rejected</option>
-                <option>OnHold</option>
-            </select>
+                <div class="dm-info-list">
+                    <div class="dm-info-item">
+                        <div class="dm-info-label">Business Unit</div>
+                        <div class="dm-info-value">@_demand.BusinessUnit</div>
+                    </div>
+                    <div class="dm-info-item">
+                        <div class="dm-info-label">Requested By</div>
+                        <div class="dm-info-value">@_demand.RequestedBy</div>
+                    </div>
+                    <div class="dm-info-item">
+                        <div class="dm-info-label">Urgency</div>
+                        <div class="dm-info-value">@_demand.Urgency / 5</div>
+                    </div>
+                    <div class="dm-info-item">
+                        <div class="dm-info-label">Estimated Effort</div>
+                        <div class="dm-info-value">@_demand.EstimatedEffort / 5</div>
+                    </div>
+                </div>
 
-            <label>Decision By</label>
-            <input class="form-control" @bind="_approval.DecisionBy" />
+                <div class="dm-divider"></div>
 
-            <label>Comments</label>
-            <textarea class="form-control" @bind="_approval.Comments" rows="3"></textarea>
-            <br />
+                <div class="dm-info-item">
+                    <div class="dm-info-label">Problem Statement</div>
+                    <div class="dm-info-value dm-info-value--text">@_demand.ProblemStatement</div>
+                </div>
+            </div>
 
-            <button class="btn btn-success" @onclick="SaveApproval">Save Approval</button>
-            <span style="margin-left:10px;">@_msgP</span>
+            <!-- Right Column: Assessment -->
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div>
+                        <div class="dm-card__title">Assessment</div>
+                        <div class="dm-card__hint">Score this demand (1-5 for each)</div>
+                    </div>
+                    <span class="dm-badge dm-badge--info">Step 1</span>
+                </div>
+
+                <div class="dm-form">
+                    <div class="dm-form-row">
+                        <label>Business Value</label>
+                        <input class="dm-input" type="number" min="1" max="5" @bind="_assessment.BusinessValue" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>Cost Impact</label>
+                        <input class="dm-input" type="number" min="1" max="5" @bind="_assessment.CostImpact" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>Risk</label>
+                        <input class="dm-input" type="number" min="1" max="5" @bind="_assessment.Risk" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>Resource Need</label>
+                        <input class="dm-input" type="number" min="1" max="5" @bind="_assessment.ResourceNeed" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>Strategic Alignment</label>
+                        <input class="dm-input" type="number" min="1" max="5" @bind="_assessment.StrategicAlignment" />
+                    </div>
+
+                    <!-- =======================
+                         NPV SECTION (Added)
+                         ======================= -->
+                    <div class="dm-divider"></div>
+                    <div class="dm-card__hint">Financial Analysis (NPV)</div>
+
+                    <div class="dm-form-row">
+                        <label>Initial Cost</label>
+                        <input class="dm-input" type="number" step="0.01" min="0" @bind="_assessment.InitialCost" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>Annual Benefit</label>
+                        <input class="dm-input" type="number" step="0.01" min="0" @bind="_assessment.AnnualBenefit" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>Project Years</label>
+                        <input class="dm-input" type="number" min="1" max="50" @bind="_assessment.ProjectYears" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>Discount Rate (%)</label>
+                        <input class="dm-input" type="number" step="0.01" min="0" max="100" @bind="_assessment.DiscountRate" />
+                    </div>
+
+                    @if (_demand?.Assessment is not null)
+                    {
+                        <div class="dm-form-row">
+                            <label>Calculated NPV</label>
+                            <div class="dm-info-value">@_demand.Assessment.CalculatedNPV</div>
+                            <div class="dm-card__hint">NPV updates after saving the assessment.</div>
+                        </div>
+                    }
+                    <!-- END NPV SECTION -->
+
+                    <div class="dm-form-row">
+                        <label>Assessed By</label>
+                        <input class="dm-input" @bind="_assessment.AssessedBy" placeholder="Your name" />
+                    </div>
+
+                    <div class="dm-form-actions">
+                        <button class="dm-btn dm-btn--primary" @onclick="SaveAssessment">Save Assessment</button>
+                        <span class="dm-msg @(_msgA.Contains("Error") ? "dm-msg--error" : "")">@_msgA</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-}
+
+        <!-- Approval Section -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Approval Decision</div>
+                    <div class="dm-card__hint">Make a decision on this demand request</div>
+                </div>
+                <span class="dm-badge dm-badge--ghost">Step 2</span>
+            </div>
+
+            <div class="dm-form dm-form--inline">
+                <div class="dm-form-row">
+                    <label>Decision</label>
+                    <select class="dm-input dm-select" @bind="_approval.Status">
+                        <option value="@DemandManagement2.Ui.Services.ApprovalStatus.Approved">Approved</option>
+                        <option value="@DemandManagement2.Ui.Services.ApprovalStatus.Rejected">Rejected</option>
+                        <option value="@DemandManagement2.Ui.Services.ApprovalStatus.OnHold">On Hold</option>
+                    </select>
+                </div>
+
+                <div class="dm-form-row">
+                    <label>Decision By</label>
+                    <input class="dm-input" @bind="_approval.DecisionBy" placeholder="Your name" />
+                </div>
+
+                <div class="dm-form-row dm-form-row--full">
+                    <label>Comments</label>
+                    <textarea class="dm-input dm-textarea" @bind="_approval.Comments" rows="3" placeholder="Optional comments..."></textarea>
+                </div>
+
+                <div class="dm-form-actions">
+                    <button class="dm-btn dm-btn--success" @onclick="SaveApproval">Save Approval</button>
+                    <span class="dm-msg @(_msgP.Contains("Error") ? "dm-msg--error" : "")">@_msgP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Notes Section -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Meeting Notes & Decisions</div>
+                    <div class="dm-card__hint">Record discussions and decisions for this demand</div>
+                </div>
+                <button class="dm-btn dm-btn--ghost" @onclick="() => _showAddNote = true">+ Add Note</button>
+            </div>
+
+            @if (_notes is null)
+            {
+                <div class="dm-loading">Loading notes...</div>
+            }
+            else if (_notes.Count == 0)
+            {
+                <div class="dm-empty">No meeting notes recorded yet.</div>
+            }
+            else
+            {
+                <div class="dm-notes-list">
+                    @foreach (var note in _notes)
+                    {
+                        <div class="dm-note-card">
+                            <div class="dm-note-header">
+                                <span class="dm-note-date">@note.MeetingDate</span>
+                                <span class="dm-note-by">Recorded by @note.RecordedBy</span>
+                            </div>
+                            <div class="dm-note-section">
+                                <div class="dm-note-label">Attendees</div>
+                                <div class="dm-note-value">@note.Attendees</div>
+                            </div>
+                            <div class="dm-note-section">
+                                <div class="dm-note-label">Discussion</div>
+                                <div class="dm-note-value">@note.Discussion</div>
+                            </div>
+                            <div class="dm-note-section">
+                                <div class="dm-note-label">Decision</div>
+                                <div class="dm-note-value dm-note-value--highlight">@note.Decision</div>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(note.ActionItems))
+                            {
+                                <div class="dm-note-section">
+                                    <div class="dm-note-label">Action Items</div>
+                                    <div class="dm-note-value">@note.ActionItems</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Add Note Modal -->
+        @if (_showAddNote)
+        {
+            <div class="dm-modal-overlay" @onclick="() => _showAddNote = false">
+                <div class="dm-modal" @onclick:stopPropagation="true">
+                    <div class="dm-modal__header">
+                        <div class="dm-modal__title">Add Meeting Note</div>
+                        <button class="dm-modal__close" @onclick="() => _showAddNote = false">&times;</button>
+                    </div>
+                    <div class="dm-form">
+                        <div class="dm-form-row">
+                            <label>Meeting Date</label>
+                            <input class="dm-input" @bind="_newNote.MeetingDate" placeholder="e.g., 2026-02-06" />
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Attendees</label>
+                            <input class="dm-input" @bind="_newNote.Attendees" placeholder="Names of attendees" />
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Discussion</label>
+                            <textarea class="dm-input dm-textarea" @bind="_newNote.Discussion" rows="3"></textarea>
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Decision</label>
+                            <textarea class="dm-input dm-textarea" @bind="_newNote.Decision" rows="2"></textarea>
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Action Items</label>
+                            <textarea class="dm-input dm-textarea" @bind="_newNote.ActionItems" rows="2"></textarea>
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Recorded By</label>
+                            <input class="dm-input" @bind="_newNote.RecordedBy" placeholder="Your name" />
+                        </div>
+                        <div class="dm-form-actions">
+                            <button class="dm-btn dm-btn--primary" @onclick="SaveNote">Save Note</button>
+                            <span class="dm-msg @(_msgN.Contains("Error") ? "dm-msg--error" : "")">@_msgN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
 
 @code {
     [Parameter] public Guid Id { get; set; }
@@ -73,27 +292,411 @@ else
     private DemandManagement2.Ui.Services.DemandDetails? _demand;
     private DemandManagement2.Ui.Services.CreateOrUpdateAssessment _assessment = new();
     private DemandManagement2.Ui.Services.CreateApproval _approval = new();
+    private List<DemandManagement2.Ui.Services.DecisionNoteItem>? _notes;
+    private DemandManagement2.Ui.Services.CreateDecisionNoteRequest _newNote = new();
+    private bool _showAddNote;
     private string _msgA = "";
     private string _msgP = "";
+    private string _msgN = "";
 
     protected override async Task OnInitializedAsync()
     {
+        await Load();
+    }
+
+    private async Task Load()
+    {
         _demand = await Api.GetDemand(Id);
+        _notes = await Api.GetDecisionNotes(Id);
+
+        if (_demand?.Assessment is not null)
+        {
+            var a = _demand.Assessment;
+            _assessment = new DemandManagement2.Ui.Services.CreateOrUpdateAssessment
+            {
+                BusinessValue = a.BusinessValue,
+                CostImpact = a.CostImpact,
+                Risk = a.Risk,
+                ResourceNeed = a.ResourceNeed,
+                StrategicAlignment = a.StrategicAlignment,
+
+                InitialCost = a.InitialCost,
+                AnnualBenefit = a.AnnualBenefit,
+                ProjectYears = a.ProjectYears,
+                DiscountRate = a.DiscountRate,
+
+                AssessedBy = a.AssessedBy
+            };
+        }
+
+        if (_demand?.Approval is not null)
+        {
+            var p = _demand.Approval;
+            _approval = new DemandManagement2.Ui.Services.CreateApproval
+            {
+                Status = p.Status,
+                DecisionBy = p.DecisionBy,
+                Comments = p.Comments
+            };
+        }
     }
 
     private async Task SaveAssessment()
     {
-        _msgA = "Saving...";
-        await Api.SaveAssessment(Id, _assessment);
-        _demand = await Api.GetDemand(Id);
-        _msgA = "Saved ✅";
+        try
+        {
+            _msgA = "Saving...";
+            StateHasChanged();
+
+            await Api.SaveAssessment(Id, _assessment);
+            await Load();
+
+            _msgA = "Saved!";
+        }
+        catch (Exception ex)
+        {
+            _msgA = $"Error: {ex.Message}";
+        }
     }
 
     private async Task SaveApproval()
     {
-        _msgP = "Saving...";
-        await Api.SaveApproval(Id, _approval);
-        _demand = await Api.GetDemand(Id);
-        _msgP = "Saved ✅";
+        try
+        {
+            _msgP = "Saving...";
+            StateHasChanged();
+
+            await Api.SaveApproval(Id, _approval);
+            await Load();
+
+            _msgP = "Saved!";
+        }
+        catch (Exception ex)
+        {
+            _msgP = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task SaveNote()
+    {
+        try
+        {
+            _msgN = "Saving...";
+            StateHasChanged();
+
+            await Api.CreateDecisionNote(Id, _newNote);
+            _notes = await Api.GetDecisionNotes(Id);
+
+            _newNote = new();
+            _showAddNote = false;
+            _msgN = "";
+        }
+        catch (Exception ex)
+        {
+            _msgN = $"Error: {ex.Message}";
+        }
     }
 }
+
+<style>
+:root{
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+  --dm-success: #22c55e;
+  --dm-success-2: #16a34a;
+  --dm-info: #06b6d4;
+}
+
+.dm-page{ max-width: 1100px; }
+
+.dm-page__header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 10px 0 20px;
+  flex-wrap: wrap;
+}
+
+.dm-title{
+  margin: 8px 0 10px;
+  font-size: 26px;
+  letter-spacing: -.02em;
+  color: var(--dm-text);
+}
+
+.dm-meta-row{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dm-actions{ display:flex; gap: 10px; flex-wrap: wrap; }
+
+.dm-pill{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.06);
+  color: var(--dm-muted);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dm-badge{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--dm-border);
+}
+.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+.dm-badge--ghost{ background: rgba(255,255,255,.04); color: var(--dm-muted); }
+
+.dm-pillSmall{
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--dm-text);
+}
+.dm-pillSmall--status{
+  background: rgba(37,99,235,.15);
+  border-color: rgba(37,99,235,.3);
+  color: #93c5fd;
+}
+.dm-pillSmall--score{
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.25);
+  color: #bbf7d0;
+}
+
+.dm-grid{ display:grid; }
+.dm-grid--2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dm-gap{ gap: 16px; }
+.dm-mt{ margin-top: 16px; }
+
+.dm-card{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.dm-card__header{
+  display:flex;
+  justify-content: space-between;
+  align-items:flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.dm-card__title{ font-weight: 900; color: var(--dm-text); }
+.dm-card__hint{ font-size: 12.5px; color: var(--dm-faint); margin-top: 2px; }
+
+.dm-divider{ height:1px; background: var(--dm-border); margin: 16px 0; }
+
+.dm-info-list{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.dm-info-item{ margin-bottom: 8px; }
+.dm-info-label{
+  font-size: 12px;
+  color: var(--dm-faint);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.dm-info-value{
+  font-weight: 800;
+  color: var(--dm-text);
+}
+.dm-info-value--text{
+  font-weight: normal;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.dm-btn{
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--success{
+  background: linear-gradient(180deg, var(--dm-success), var(--dm-success-2));
+  color: white;
+  border-color: rgba(34,197,94,.55);
+}
+.dm-btn--success:hover{ transform: translateY(-1px); }
+.dm-btn--ghost{
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+}
+.dm-btn--ghost:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+.dm-loading{
+  padding: 60px;
+  text-align: center;
+  color: var(--dm-muted);
+}
+
+.dm-form{ display: flex; flex-direction: column; gap: 12px; }
+.dm-form--inline{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.dm-form-row{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dm-form-row--full{
+  grid-column: 1 / -1;
+}
+.dm-form-row label{
+  font-size: 13px;
+  color: var(--dm-muted);
+  font-weight: 600;
+}
+
+.dm-input{
+  background: rgba(0,0,0,.25);
+  border: 1px solid var(--dm-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--dm-text);
+  font-size: 14px;
+  transition: border-color .15s ease;
+}
+.dm-input:focus{
+  outline: none;
+  border-color: var(--dm-primary);
+}
+.dm-input::placeholder{
+  color: var(--dm-faint);
+}
+
+.dm-select{
+  cursor: pointer;
+}
+
+.dm-textarea{
+  resize: vertical;
+  min-height: 80px;
+}
+
+.dm-form-actions{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  grid-column: 1 / -1;
+}
+
+.dm-msg{
+  font-size: 13px;
+  color: var(--dm-success);
+}
+.dm-msg--error{
+  color: #f87171;
+}
+
+.dm-loading, .dm-empty{
+  padding: 30px;
+  text-align: center;
+  color: var(--dm-muted);
+}
+
+/* Notes styles */
+.dm-notes-list{ display: flex; flex-direction: column; gap: 14px; }
+.dm-note-card{
+  background: rgba(0,0,0,.15);
+  border: 1px solid var(--dm-border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.dm-note-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--dm-border);
+}
+.dm-note-date{ font-weight: 800; color: var(--dm-text); }
+.dm-note-by{ font-size: 12px; color: var(--dm-muted); }
+.dm-note-section{ margin-bottom: 10px; }
+.dm-note-label{ font-size: 11px; color: var(--dm-faint); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.dm-note-value{ color: var(--dm-text); line-height: 1.5; white-space: pre-wrap; }
+.dm-note-value--highlight{ color: var(--dm-info); font-weight: 600; }
+
+/* Modal */
+.dm-modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.dm-modal{
+  background: #1a1a2e;
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+  padding: 20px;
+  min-width: 450px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0,0,0,.5);
+}
+.dm-modal__header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.dm-modal__title{ font-weight: 900; font-size: 18px; color: var(--dm-text); }
+.dm-modal__close{
+  background: none;
+  border: none;
+  color: var(--dm-muted);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+.dm-modal__close:hover{ color: var(--dm-text); }
+
+@@media (max-width: 800px){
+  .dm-grid--2{ grid-template-columns: 1fr; }
+  .dm-form--inline{ grid-template-columns: 1fr; }
+  .dm-page__header{ flex-direction: column; }
+  .dm-info-list{ grid-template-columns: 1fr; }
+  .dm-modal{ min-width: auto; width: 95vw; }
+}
+</style>
