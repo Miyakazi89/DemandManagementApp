@@ -1,0 +1,161 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@rendermode InteractiveServer
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Sign In</PageTitle>
+
+<div class="dm-auth">
+    <div class="dm-auth__card">
+        <div class="dm-auth__header">
+            <div class="dm-brand__mark">DM</div>
+            <h2 class="dm-auth__title">Sign In</h2>
+            <p class="dm-auth__hint">Enter your credentials to access Demand Management</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="dm-auth__alert">@_error</div>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="HandleLogin" FormName="login">
+            <div class="dm-field">
+                <label class="dm-label">Email</label>
+                <InputText @bind-Value="_model.Email" class="dm-input" placeholder="you@company.com" />
+            </div>
+
+            <div class="dm-field">
+                <label class="dm-label">Password</label>
+                <InputText @bind-Value="_model.Password" type="password" class="dm-input" placeholder="Enter password" />
+            </div>
+
+            <button type="submit" class="dm-btn dm-btn--primary dm-btn--full" disabled="@_loading">
+                @(_loading ? "Signing in..." : "Sign In")
+            </button>
+        </EditForm>
+
+        <div class="dm-auth__footer">
+            No account? <a href="/register" class="dm-auth__link">Register here</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginRequest _model = new();
+    private string? _error;
+    private bool _loading;
+
+    private async Task HandleLogin()
+    {
+        _loading = true;
+        _error = null;
+
+        var (success, error) = await AuthService.LoginAsync(_model);
+        if (success)
+            Navigation.NavigateTo("/", forceLoad: true);
+        else
+            _error = error ?? "Invalid email or password.";
+
+        _loading = false;
+    }
+}
+
+<style>
+:root{
+  --dm-border: rgba(255,255,255,.10);
+  --dm-text: rgba(255,255,255,.92);
+  --dm-muted: rgba(255,255,255,.68);
+  --dm-faint: rgba(255,255,255,.52);
+  --dm-primary: #2563eb;
+  --dm-primary-2: #1d4ed8;
+}
+
+.dm-auth{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: radial-gradient(800px 600px at 50% 20%, rgba(37,99,235,.15), transparent 60%), #070b14;
+}
+
+.dm-auth__card{
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+
+.dm-auth__header{ text-align: center; margin-bottom: 24px; }
+.dm-brand__mark{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  font-weight: 950;
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+.dm-auth__title{ color: var(--dm-text); margin: 0 0 6px; font-size: 24px; }
+.dm-auth__hint{ color: var(--dm-muted); font-size: 14px; margin: 0; }
+
+.dm-auth__alert{
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.dm-field{ margin-bottom: 16px; }
+.dm-label{ display: block; color: var(--dm-muted); font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.dm-input{
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+.dm-input::placeholder{ color: var(--dm-faint); }
+.dm-input:focus{ border-color: rgba(37,99,235,.5); }
+
+.dm-btn{
+  border: 1px solid var(--dm-border);
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform .12s ease, background .12s ease;
+}
+.dm-btn--primary{
+  background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
+  color: white;
+  border-color: rgba(37,99,235,.55);
+}
+.dm-btn--primary:hover{ transform: translateY(-1px); }
+.dm-btn--primary:disabled{ opacity: .6; cursor: not-allowed; transform: none; }
+.dm-btn--full{ width: 100%; margin-top: 8px; }
+
+.dm-auth__footer{
+  text-align: center;
+  margin-top: 18px;
+  color: var(--dm-muted);
+  font-size: 14px;
+}
+.dm-auth__link{ color: #93c5fd; text-decoration: none; font-weight: 700; }
+.dm-auth__link:hover{ text-decoration: underline; }
+</style>

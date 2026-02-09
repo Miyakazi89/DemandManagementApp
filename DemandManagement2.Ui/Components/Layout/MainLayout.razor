@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 
 <div class="dm-shell">
     <aside class="dm-sidebar">
@@ -27,12 +29,16 @@
             </div>
 
             <div class="dm-topbar__right">
-                <a class="dm-topbar__link"
-                   href="https://learn.microsoft.com/aspnet/core/"
-                   target="_blank"
-                   rel="noreferrer">
-                    About
-                </a>
+                <AuthorizeView>
+                    <Authorized>
+                        <span class="dm-topbar__user">@context.User.Identity?.Name</span>
+                        <span class="dm-topbar__role">@context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                        <button class="dm-topbar__link" @onclick="Logout">Sign Out</button>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="/login" class="dm-topbar__link">Sign In</a>
+                    </NotAuthorized>
+                </AuthorizeView>
             </div>
         </header>
 
@@ -52,6 +58,14 @@
         </div>
     </div>
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}
 
 <style>
 /* ===== Theme tokens ===== */
@@ -184,6 +198,28 @@ body{
   margin-top: 2px;
 }
 
+.dm-topbar__right{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-topbar__user{
+  font-weight: 800;
+  color: var(--dm-text);
+  font-size: 13px;
+}
+
+.dm-topbar__role{
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37,99,235,.15);
+  border: 1px solid rgba(37,99,235,.3);
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .dm-topbar__link{
   color: var(--dm-text);
   text-decoration: none;
@@ -191,6 +227,9 @@ body{
   border-radius: 12px;
   border: 1px solid var(--dm-border);
   background: rgba(255,255,255,.04);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
   transition: transform .12s ease, background .12s ease;
 }
 .dm-topbar__link:hover{

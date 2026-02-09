@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DemandManagement2.Domain\DemandManagement2.Domain.csproj" />
+    <ProjectReference Include="..\DemandManagement2.Api\DemandManagement2.Api.csproj" />
   </ItemGroup>
 
 </Project>

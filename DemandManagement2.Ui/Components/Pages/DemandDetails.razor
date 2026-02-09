@@ -2,6 +2,8 @@
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IConfiguration Config
 
 <div class="dm-page">
     @if (_demand is null)
@@ -26,8 +28,35 @@
             <div class="dm-actions">
                 <a href="/demands" class="dm-btn dm-btn--ghost">Back to List</a>
                 <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+                @if (_isAdminOrAssessor)
+                {
+                    <button class="dm-btn dm-btn--warning" @onclick="() => _showRequestInfo = !_showRequestInfo" disabled="@(_demand.Status == "NeedsInfo")">
+                        Request Info
+                    </button>
+                    <button class="dm-btn dm-btn--danger" @onclick="DeleteDemand" disabled="@_deleting">
+                        @(_deleting ? "Deleting..." : "Delete")
+                    </button>
+                }
             </div>
         </div>
+
+        @if (_showRequestInfo && _isAdminOrAssessor)
+        {
+            <div class="dm-card dm-mt" style="border-color: rgba(245,158,11,.35);">
+                <div class="dm-card__title" style="margin-bottom:10px;">Request Additional Information</div>
+                <div class="dm-card__hint" style="margin-bottom:12px;">Describe what information you need from the requester.</div>
+                <div class="dm-form">
+                    <div class="dm-form-row">
+                        <label>What information is needed?</label>
+                        <textarea class="dm-input dm-textarea" @bind="_requestInfoMessage" rows="3" placeholder="e.g. Please provide budget estimates, stakeholder approvals, or technical specifications..."></textarea>
+                    </div>
+                    <div class="dm-form-actions">
+                        <button class="dm-btn dm-btn--warning" @onclick="RequestMoreInfo" disabled="@(string.IsNullOrWhiteSpace(_requestInfoMessage))">Send Request</button>
+                        <button class="dm-btn dm-btn--ghost" @onclick="() => _showRequestInfo = false">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        }
 
         <div class="dm-grid dm-grid--2 dm-gap">
             <!-- Left Column: Demand Info -->
@@ -56,6 +85,36 @@
                         <div class="dm-info-label">Estimated Effort</div>
                         <div class="dm-info-value">@_demand.EstimatedEffort / 5</div>
                     </div>
+                    <div class="dm-info-item">
+                        <div class="dm-info-label">Created</div>
+                        <div class="dm-info-value">@_demand.CreatedAtUtc.ToString("dd MMM yyyy HH:mm")</div>
+                    </div>
+                    <div class="dm-info-item">
+                        <div class="dm-info-label">Target Date (SLA)</div>
+                        @if (_demand.TargetDate.HasValue)
+                        {
+                            <div class="dm-info-value">
+                                @_demand.TargetDate.Value.ToString("dd MMM yyyy")
+                                @{ var daysLeft = (_demand.TargetDate.Value - DateTime.UtcNow).Days; }
+                                @if (daysLeft < 0)
+                                {
+                                    <span class="dm-sla-badge dm-sla--overdue">OVERDUE by @Math.Abs(daysLeft) days</span>
+                                }
+                                else if (daysLeft <= 7)
+                                {
+                                    <span class="dm-sla-badge dm-sla--warning">@daysLeft days left</span>
+                                }
+                                else
+                                {
+                                    <span class="dm-sla-badge dm-sla--ok">@daysLeft days left</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="dm-info-value" style="color:var(--dm-faint)">Not set</div>
+                        }
+                    </div>
                 </div>
 
                 <div class="dm-divider"></div>
@@ -64,9 +123,66 @@
                     <div class="dm-info-label">Problem Statement</div>
                     <div class="dm-info-value dm-info-value--text">@_demand.ProblemStatement</div>
                 </div>
+
+                @if (!_isAdminOrAssessor && (_demand.Status == "Intake" || _demand.Status == "NeedsInfo"))
+                {
+                    <div class="dm-divider"></div>
+                    @if (_demand.Status == "NeedsInfo")
+                    {
+                        <div class="dm-info-requested-box">
+                            <div class="dm-info-requested-title">Additional Information Requested</div>
+                            @{
+                                var latestInfoEvent = _demand.Events?
+                                    .Where(e => e.EventType == "InfoRequested")
+                                    .OrderByDescending(e => e.OccurredAtUtc)
+                                    .FirstOrDefault();
+                            }
+                            @if (latestInfoEvent is not null)
+                            {
+                                <div class="dm-info-requested-msg">@latestInfoEvent.Description</div>
+                                <div class="dm-info-requested-meta">@latestInfoEvent.OccurredAtUtc.ToString("dd MMM yyyy HH:mm")</div>
+                            }
+                            <div class="dm-card__hint" style="color:#fbbf24; margin-top:8px;">
+                                Please update your demand below to address the request.
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="dm-card__hint" style="color:#93c5fd; margin-bottom:10px;">
+                            You can edit your request while it is still in Intake.
+                        </div>
+                    }
+                    <div class="dm-form">
+                        <div class="dm-form-row">
+                            <label>Title</label>
+                            <input class="dm-input" @bind="_editRequest.Title" />
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Problem Statement</label>
+                            <textarea class="dm-input dm-textarea" @bind="_editRequest.ProblemStatement" rows="4"></textarea>
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Urgency (1-5)</label>
+                            <input class="dm-input" type="number" min="1" max="5" @bind="_editRequest.Urgency" />
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Estimated Effort (1-5)</label>
+                            <input class="dm-input" type="number" min="1" max="5" @bind="_editRequest.EstimatedEffort" />
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Target Date (Estimated Finish)</label>
+                            <input class="dm-input" type="date" @bind="_editTargetDate" />
+                        </div>
+                        <div class="dm-form-actions">
+                            <button class="dm-btn dm-btn--primary" @onclick="SubmitUpdate">Submit Update</button>
+                            <span class="dm-msg @(_msgU.Contains("Error") ? "dm-msg--error" : "")">@_msgU</span>
+                        </div>
+                    </div>
+                }
             </div>
 
-            <!-- Right Column: Assessment -->
+            <!-- Right Column: Assessment (Admin/Assessor only) -->
             <div class="dm-card">
                 <div class="dm-card__header">
                     <div>
@@ -76,6 +192,8 @@
                     <span class="dm-badge dm-badge--info">Step 1</span>
                 </div>
 
+                @if (_isAdminOrAssessor)
+                {
                 <div class="dm-form">
                     <div class="dm-form-row">
                         <label>Business Value</label>
@@ -102,9 +220,6 @@
                         <input class="dm-input" type="number" min="1" max="5" @bind="_assessment.StrategicAlignment" />
                     </div>
 
-                    <!-- =======================
-                         NPV SECTION (Added)
-                         ======================= -->
                     <div class="dm-divider"></div>
                     <div class="dm-card__hint">Financial Analysis (NPV)</div>
 
@@ -136,7 +251,6 @@
                             <div class="dm-card__hint">NPV updates after saving the assessment.</div>
                         </div>
                     }
-                    <!-- END NPV SECTION -->
 
                     <div class="dm-form-row">
                         <label>Assessed By</label>
@@ -148,9 +262,16 @@
                         <span class="dm-msg @(_msgA.Contains("Error") ? "dm-msg--error" : "")">@_msgA</span>
                     </div>
                 </div>
+                }
+                else
+                {
+                    <div class="dm-empty">Only Admin and Assessor roles can perform assessments.</div>
+                }
             </div>
         </div>
 
+        @if (_isAdminOrAssessor)
+        {
         <!-- Approval Section -->
         <div class="dm-card dm-mt">
             <div class="dm-card__header">
@@ -187,6 +308,7 @@
                 </div>
             </div>
         </div>
+        }
 
         <!-- Decision Notes Section -->
         <div class="dm-card dm-mt">
@@ -241,6 +363,76 @@
             }
         </div>
 
+        <!-- Attachments Section -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Attachments</div>
+                    <div class="dm-card__hint">Supporting documents for this demand</div>
+                </div>
+            </div>
+
+            @if (_demand.Attachments is null || _demand.Attachments.Count == 0)
+            {
+                <div class="dm-empty">No attachments uploaded yet.</div>
+            }
+            else
+            {
+                <div class="dm-attach-list">
+                    @foreach (var att in _demand.Attachments)
+                    {
+                        <div class="dm-attach-item">
+                            <div class="dm-attach-info">
+                                <span class="dm-attach-name">@att.FileName</span>
+                                <span class="dm-attach-meta">@FormatFileSize(att.FileSizeBytes) &middot; Uploaded by @att.UploadedBy &middot; @att.UploadedAtUtc.ToString("dd MMM yyyy HH:mm")</span>
+                            </div>
+                            <div class="dm-attach-actions">
+                                <a href="@($"{_apiBase}{att.DownloadUrl}")" target="_blank" class="dm-btn dm-btn--ghost" style="padding:6px 10px; font-size:12px;">Download</a>
+                                @if (_isAdminOrAssessor)
+                                {
+                                    <button class="dm-btn dm-btn--danger" style="padding:6px 10px; font-size:12px;" @onclick="() => DeleteAttachment(att.Id)">Delete</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Activity Timeline</div>
+                    <div class="dm-card__hint">History of all actions on this demand</div>
+                </div>
+            </div>
+
+            @if (_demand.Events is null || _demand.Events.Count == 0)
+            {
+                <div class="dm-empty">No events recorded yet.</div>
+            }
+            else
+            {
+                <div class="dm-timeline">
+                    @foreach (var evt in _demand.Events)
+                    {
+                        <div class="dm-timeline-item">
+                            <div class="dm-timeline-dot @GetTimelineDotClass(evt.EventType)"></div>
+                            <div class="dm-timeline-content">
+                                <div class="dm-timeline-header">
+                                    <span class="dm-timeline-type">@evt.EventType</span>
+                                    <span class="dm-timeline-time">@evt.OccurredAtUtc.ToString("dd MMM yyyy HH:mm")</span>
+                                </div>
+                                <div class="dm-timeline-desc">@evt.Description</div>
+                                <div class="dm-timeline-by">by @evt.PerformedBy</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
         <!-- Add Note Modal -->
         @if (_showAddNote)
         {
@@ -253,7 +445,7 @@
                     <div class="dm-form">
                         <div class="dm-form-row">
                             <label>Meeting Date</label>
-                            <input class="dm-input" @bind="_newNote.MeetingDate" placeholder="e.g., 2026-02-06" />
+                            <input type="date" class="dm-input" @bind="_meetingDate" />
                         </div>
                         <div class="dm-form-row">
                             <label>Attendees</label>
@@ -295,13 +487,77 @@
     private List<DemandManagement2.Ui.Services.DecisionNoteItem>? _notes;
     private DemandManagement2.Ui.Services.CreateDecisionNoteRequest _newNote = new();
     private bool _showAddNote;
+    private bool _isAdminOrAssessor;
+    private bool _deleting;
+    private DateTime _meetingDate = DateTime.Today;
+    private DemandManagement2.Ui.Services.CreateDemandRequest _editRequest = new();
     private string _msgA = "";
     private string _msgP = "";
     private string _msgN = "";
+    private string _msgU = "";
+    private string _apiBase = "";
+    private bool _showRequestInfo;
+    private string _requestInfoMessage = "";
+    private DateTime _editTargetDate = DateTime.Today;
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F1} MB";
+    }
+
+    private string GetTimelineDotClass(string eventType) => eventType switch
+    {
+        "Created" => "dm-dot--blue",
+        "Assessed" => "dm-dot--cyan",
+        "Approved" => "dm-dot--green",
+        "Rejected" => "dm-dot--red",
+        "OnHold" => "dm-dot--yellow",
+        "Updated" => "dm-dot--purple",
+        "InfoRequested" => "dm-dot--yellow",
+        "NoteAdded" => "dm-dot--gray",
+        "FileUploaded" => "dm-dot--teal",
+        _ => "dm-dot--gray"
+    };
+
+    private async Task DeleteAttachment(Guid attachmentId)
+    {
+        try
+        {
+            await Api.DeleteAttachment(Id, attachmentId);
+            await Load();
+        }
+        catch (Exception ex)
+        {
+            _msgA = $"Error: {ex.Message}";
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        _apiBase = (Config["ApiBaseUrl"] ?? "http://localhost:5182").TrimEnd('/');
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _isAdminOrAssessor = user.IsInRole("Admin") || user.IsInRole("Assessor");
+
         await Load();
+    }
+
+    private async Task DeleteDemand()
+    {
+        _deleting = true;
+        try
+        {
+            await Api.DeleteDemand(Id);
+            Nav.NavigateTo("/demands");
+        }
+        catch (Exception ex)
+        {
+            _msgA = $"Error: {ex.Message}";
+            _deleting = false;
+        }
     }
 
     private async Task Load()
@@ -338,6 +594,23 @@
                 DecisionBy = p.DecisionBy,
                 Comments = p.Comments
             };
+        }
+
+        // Populate edit form for Requester updates
+        if (_demand is not null)
+        {
+            _editRequest = new DemandManagement2.Ui.Services.CreateDemandRequest
+            {
+                Title = _demand.Title,
+                ProblemStatement = _demand.ProblemStatement,
+                Type = Enum.TryParse<DemandType>(_demand.Type, out var dt) ? dt : DemandType.Project,
+                BusinessUnit = _demand.BusinessUnit,
+                RequestedBy = _demand.RequestedBy,
+                Urgency = _demand.Urgency,
+                EstimatedEffort = (int)_demand.EstimatedEffort,
+                TargetDate = _demand.TargetDate
+            };
+            _editTargetDate = _demand.TargetDate ?? DateTime.Today;
         }
     }
 
@@ -384,16 +657,52 @@
             _msgN = "Saving...";
             StateHasChanged();
 
+            _newNote.MeetingDate = _meetingDate.ToString("yyyy-MM-dd");
             await Api.CreateDecisionNote(Id, _newNote);
             _notes = await Api.GetDecisionNotes(Id);
 
             _newNote = new();
+            _meetingDate = DateTime.Today;
             _showAddNote = false;
             _msgN = "";
         }
         catch (Exception ex)
         {
             _msgN = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task RequestMoreInfo()
+    {
+        try
+        {
+            await Api.RequestInfo(Id, _requestInfoMessage);
+            _requestInfoMessage = "";
+            _showRequestInfo = false;
+            await Load();
+        }
+        catch (Exception ex)
+        {
+            _msgA = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task SubmitUpdate()
+    {
+        try
+        {
+            _msgU = "Saving...";
+            StateHasChanged();
+
+            _editRequest.TargetDate = _editTargetDate;
+            await Api.UpdateDemand(Id, _editRequest);
+            await Load();
+
+            _msgU = "Updated! Status changed to Under Review.";
+        }
+        catch (Exception ex)
+        {
+            _msgU = $"Error: {ex.Message}";
         }
     }
 }
@@ -551,6 +860,20 @@
   border-color: rgba(34,197,94,.55);
 }
 .dm-btn--success:hover{ transform: translateY(-1px); }
+.dm-btn--danger{
+  background: linear-gradient(180deg, #ef4444, #dc2626);
+  color: white;
+  border-color: rgba(239,68,68,.55);
+}
+.dm-btn--danger:hover{ transform: translateY(-1px); }
+.dm-btn--danger:disabled{ opacity: .6; cursor: not-allowed; transform: none; }
+.dm-btn--warning{
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+  color: white;
+  border-color: rgba(245,158,11,.55);
+}
+.dm-btn--warning:hover{ transform: translateY(-1px); }
+.dm-btn--warning:disabled{ opacity: .6; cursor: not-allowed; transform: none; }
 .dm-btn--ghost{
   background: rgba(255,255,255,.04);
   color: var(--dm-text);
@@ -691,6 +1014,117 @@
   line-height: 1;
 }
 .dm-modal__close:hover{ color: var(--dm-text); }
+
+/* Info Requested box */
+.dm-info-requested-box{
+  background: rgba(245,158,11,.08);
+  border: 1px solid rgba(245,158,11,.3);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.dm-info-requested-title{
+  font-weight: 900;
+  color: #fbbf24;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.dm-info-requested-msg{
+  color: var(--dm-text);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  padding: 8px 12px;
+  background: rgba(0,0,0,.2);
+  border-radius: 8px;
+  border-left: 3px solid #f59e0b;
+}
+.dm-info-requested-meta{
+  font-size: 11px;
+  color: var(--dm-faint);
+  margin-top: 6px;
+}
+
+/* SLA badges */
+.dm-sla-badge{
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  margin-left: 8px;
+}
+.dm-sla--overdue{
+  background: rgba(239,68,68,.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,.3);
+}
+.dm-sla--warning{
+  background: rgba(245,158,11,.2);
+  color: #fde68a;
+  border: 1px solid rgba(245,158,11,.3);
+}
+.dm-sla--ok{
+  background: rgba(34,197,94,.15);
+  color: #bbf7d0;
+  border: 1px solid rgba(34,197,94,.25);
+}
+
+/* Attachments */
+.dm-attach-list{ display: flex; flex-direction: column; gap: 10px; }
+.dm-attach-item{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(0,0,0,.15);
+  border: 1px solid var(--dm-border);
+  border-radius: 10px;
+}
+.dm-attach-info{ display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dm-attach-name{ font-weight: 700; color: var(--dm-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-attach-meta{ font-size: 11px; color: var(--dm-faint); }
+.dm-attach-actions{ display: flex; gap: 6px; flex-shrink: 0; }
+
+/* Timeline */
+.dm-timeline{ display: flex; flex-direction: column; gap: 0; padding-left: 20px; border-left: 2px solid var(--dm-border); }
+.dm-timeline-item{
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+  position: relative;
+}
+.dm-timeline-dot{
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+  position: absolute;
+  left: -27px;
+}
+.dm-dot--blue{ background: #3b82f6; }
+.dm-dot--cyan{ background: #06b6d4; }
+.dm-dot--green{ background: #22c55e; }
+.dm-dot--red{ background: #ef4444; }
+.dm-dot--yellow{ background: #f59e0b; }
+.dm-dot--purple{ background: #a855f7; }
+.dm-dot--teal{ background: #14b8a6; }
+.dm-dot--gray{ background: rgba(255,255,255,.3); }
+
+.dm-timeline-content{ padding-left: 4px; }
+.dm-timeline-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.dm-timeline-type{ font-weight: 800; color: var(--dm-text); font-size: 13px; }
+.dm-timeline-time{ font-size: 11px; color: var(--dm-faint); }
+.dm-timeline-desc{ color: var(--dm-muted); font-size: 13px; line-height: 1.5; }
+.dm-timeline-by{ font-size: 11px; color: var(--dm-faint); margin-top: 2px; }
 
 @@media (max-width: 800px){
   .dm-grid--2{ grid-template-columns: 1fr; }

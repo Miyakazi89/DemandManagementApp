@@ -153,6 +153,75 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                     b.ToTable("DecisionNotes");
                 });
 
+            modelBuilder.Entity("DemandManagement2.Domain.Entities.DemandAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DemandRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UploadedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DemandRequestId");
+
+                    b.ToTable("DemandAttachments");
+                });
+
+            modelBuilder.Entity("DemandManagement2.Domain.Entities.DemandEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DemandRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PerformedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DemandRequestId");
+
+                    b.ToTable("DemandEvents");
+                });
+
             modelBuilder.Entity("DemandManagement2.Domain.Entities.DemandRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -179,6 +248,9 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("TargetDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -264,6 +336,39 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                     b.ToTable("ResourceAllocations");
                 });
 
+            modelBuilder.Entity("DemandManagement2.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("DemandManagement2.Domain.Entities.ApprovalDecision", b =>
                 {
                     b.HasOne("DemandManagement2.Domain.Entities.DemandRequest", "DemandRequest")
@@ -297,6 +402,28 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                     b.Navigation("DemandRequest");
                 });
 
+            modelBuilder.Entity("DemandManagement2.Domain.Entities.DemandAttachment", b =>
+                {
+                    b.HasOne("DemandManagement2.Domain.Entities.DemandRequest", "DemandRequest")
+                        .WithMany("Attachments")
+                        .HasForeignKey("DemandRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DemandRequest");
+                });
+
+            modelBuilder.Entity("DemandManagement2.Domain.Entities.DemandEvent", b =>
+                {
+                    b.HasOne("DemandManagement2.Domain.Entities.DemandRequest", "DemandRequest")
+                        .WithMany("Events")
+                        .HasForeignKey("DemandRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DemandRequest");
+                });
+
             modelBuilder.Entity("DemandManagement2.Domain.Entities.ResourceAllocation", b =>
                 {
                     b.HasOne("DemandManagement2.Domain.Entities.DemandRequest", "DemandRequest")
@@ -322,7 +449,11 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
 
                     b.Navigation("Assessment");
 
+                    b.Navigation("Attachments");
+
                     b.Navigation("DecisionNotes");
+
+                    b.Navigation("Events");
 
                     b.Navigation("ResourceAllocations");
                 });

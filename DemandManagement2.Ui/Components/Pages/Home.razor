@@ -1,5 +1,7 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 @inject NavigationManager Nav
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
 
 <PageTitle>Home</PageTitle>
 
@@ -36,20 +38,40 @@
                 <div class="dm-badge dm-badge--info">Live</div>
             </div>
 
-            <div class="dm-grid dm-grid--3">
-                <div class="dm-stat">
-                    <div class="dm-stat__label">New Intake</div>
-                    <div class="dm-stat__value">—</div>
+            @if (_loading)
+            {
+                <div class="dm-grid dm-grid--3">
+                    <div class="dm-stat">
+                        <div class="dm-stat__label">New Intake</div>
+                        <div class="dm-stat__value">...</div>
+                    </div>
+                    <div class="dm-stat">
+                        <div class="dm-stat__label">In Assessment</div>
+                        <div class="dm-stat__value">...</div>
+                    </div>
+                    <div class="dm-stat">
+                        <div class="dm-stat__label">Awaiting Approval</div>
+                        <div class="dm-stat__value">...</div>
+                    </div>
                 </div>
-                <div class="dm-stat">
-                    <div class="dm-stat__label">In Assessment</div>
-                    <div class="dm-stat__value">—</div>
+            }
+            else
+            {
+                <div class="dm-grid dm-grid--3">
+                    <div class="dm-stat">
+                        <div class="dm-stat__label">New Intake</div>
+                        <div class="dm-stat__value">@_kpiIntake</div>
+                    </div>
+                    <div class="dm-stat">
+                        <div class="dm-stat__label">In Assessment</div>
+                        <div class="dm-stat__value">@_kpiAssessment</div>
+                    </div>
+                    <div class="dm-stat">
+                        <div class="dm-stat__label">Awaiting Approval</div>
+                        <div class="dm-stat__value">@_kpiApproval</div>
+                    </div>
                 </div>
-                <div class="dm-stat">
-                    <div class="dm-stat__label">Awaiting Approval</div>
-                    <div class="dm-stat__value">—</div>
-                </div>
-            </div>
+            }
 
             <div class="dm-divider"></div>
 
@@ -110,6 +132,32 @@
         Built for clarity • Designed for speed • Ready for scale
     </div>
 </footer>
+
+@code {
+    private bool _loading = true;
+    private int _kpiIntake;
+    private int _kpiAssessment;
+    private int _kpiApproval;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var all = await Api.GetDemands();
+            _kpiIntake = all.Count(d => string.Equals(d.Status, "Intake", StringComparison.OrdinalIgnoreCase));
+            _kpiAssessment = all.Count(d => d.WeightedScore is not null);
+            _kpiApproval = all.Count(d => string.Equals(d.Status, "UnderReview", StringComparison.OrdinalIgnoreCase));
+        }
+        catch
+        {
+            // Fail silently — stats will show 0
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}
 
 <style>
 :root{

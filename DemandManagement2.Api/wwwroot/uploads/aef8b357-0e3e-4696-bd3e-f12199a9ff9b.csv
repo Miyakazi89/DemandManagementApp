@@ -1,0 +1,53 @@
+Work Item Type,Title 1,Title 2,Title 3
+Epic,Equipment Service Booking Platform,,
+Feature,,Booking Management,
+User Story,,,"As a requester, I want an online form with required fields so I can submit complete and consistent requests, and as a PMO analyst, I want all submissions stored centrally for tracking."
+Feature,,Request Categorization,
+User Story,,,"As a PMO analyst, I want requests automatically categorized, and as a portfolio manager, I want them grouped by department so the evaluation process is easy and structured."
+Feature,,Intake Workflow Automation,
+User Story,,,"As a requester, I want submission confirmations, and as a PMO team member, I want automated routing so requests reach the correct approvers efficiently."
+Epic,Evaluation & Assessment,,
+Feature,,Business Value Scoring:,
+User Story,,,"As a portfolio manager, I want value?based scoring, and as an analyst, I want comparable scores so prioritization decisions are fair and objective."
+Feature,,"Effort, Cost & Resource Assessment",
+User Story,,,"As a resource manager, I want resource estimates, and as a PMO analyst, I want cost and risk captured to support accurate demand evaluation."
+Feature,,Strategic Alignment Assessment,
+User Story,,,"As a strategy team member, I want requests tagged to strategic goals, and as a portfolio manager, I want alignment scores visible to guide decision?making."
+Epic,Prioritization & Governance,,
+Feature,,Prioritization Framework,
+User Story,,,"As a governance board member, I want a standardized prioritization model, and as a PMO analyst, I want automatically generated ranked lists to support evaluation."
+Feature,,Approval Workflow,
+User Story,,,"As an approver, I want digital workflows for efficient reviews, and as a requester, I want visibility into my request’s approval status for transparency."
+Feature,,Portfolio Decision Meetings,
+User Story,,,"As a portfolio manager, I want dashboards that prepare decision meetings, and as a governance board, I want decisions recorded for future reference and auditing."
+Epic,Resource & Capacity Planning,,
+Feature,,Resource Availability Tracking,
+User Story,,,"As a resource manager, I want a clear view of annual capacity, and as a PMO analyst, I want visibility into bottlenecks to prevent overload."
+Feature,,Scenario Planning,
+User Story,,,"As a portfolio manager, I want to compare prioritization scenarios, and as an executive, I want to understand trade?offs of approving or delaying requests."
+Feature,,Capacity vs Demand Dashboard,
+User Story,,,"As a PMO team member, I want visual dashboards showing demand versus capacity to support balanced planning."
+Epic,"Monitoring, Reporting & Continuous Improvement",,
+Feature,,Demand Pipeline Dashboard,
+User Story,,,"As a portfolio manager, I want to see the full demand pipeline, and as a PMO analyst, I want to update request statuses throughout their lifecycle."
+Feature,,Communication & Transparency,
+User Story,,,"As a requester, I want automated status updates, and as a leadership member, I want visibility into the reasons for approval or rejection."
+Feature,,Process Improvement,
+User Story,,,"As a PMO team, I want regular process review cycles, and as a portfolio manager, I want feedback loops to continually improve scoring and evaluation."
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,

@@ -1,10 +1,12 @@
 using DemandManagement2.Domain.Entities;
 using DemandManagement2.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DemandManagement2.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/demands/{demandId:guid}/notes")]
 public class DecisionNotesController : ControllerBase
@@ -66,6 +68,17 @@ public class DecisionNotesController : ControllerBase
         };
 
         _db.DecisionNotes.Add(note);
+
+        // Record timeline event
+        var userName = User.Identity?.Name ?? dto.RecordedBy;
+        _db.DemandEvents.Add(new DemandEvent
+        {
+            DemandRequestId = demandId,
+            EventType = "NoteAdded",
+            Description = $"Meeting note added by {userName}",
+            PerformedBy = userName
+        });
+
         await _db.SaveChangesAsync();
 
         return Ok(new { note.Id });

@@ -1,6 +1,7 @@
 @page "/demands"
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="dm-page">
     <div class="dm-page__header">
@@ -16,34 +17,85 @@
         </div>
     </div>
 
+    @if (_userRole == "Requester" && _needsInfoCount > 0)
+    {
+        <div class="dm-alert dm-alert--warning">
+            <span class="dm-alert__icon">!</span>
+            <span>You have <strong>@_needsInfoCount</strong> demand request@(_needsInfoCount > 1 ? "s" : "") requiring additional information. Please review and update @(_needsInfoCount > 1 ? "them" : "it").</span>
+        </div>
+    }
+
+    <!-- Search & Filter Bar -->
+    <div class="dm-filterbar">
+        <input class="dm-search" type="text" placeholder="Search by title, unit, or requester..."
+               @bind="_searchText" @bind:event="oninput" />
+
+        <select class="dm-select" @bind="_statusFilter">
+            <option value="">All Statuses</option>
+            <option value="Intake">Intake</option>
+            <option value="UnderReview">Under Review</option>
+            <option value="Prioritized">Prioritized</option>
+            <option value="Approved">Approved</option>
+            <option value="Backlog">Backlog</option>
+            <option value="Rejected">Rejected</option>
+            <option value="NeedsInfo">Needs Info</option>
+        </select>
+
+        <select class="dm-select" @bind="_typeFilter">
+            <option value="">All Types</option>
+            <option value="Project">Project</option>
+            <option value="Enhancement">Enhancement</option>
+            <option value="Service">Service</option>
+            <option value="ResourceRequest">Resource Request</option>
+        </select>
+
+        @if (!string.IsNullOrEmpty(_searchText) || !string.IsNullOrEmpty(_statusFilter) || !string.IsNullOrEmpty(_typeFilter))
+        {
+            <button class="dm-btn dm-btn--ghost dm-btn--sm" @onclick="ClearFilters">Clear</button>
+        }
+    </div>
+
     <div class="dm-card">
         <div class="dm-card__header">
             <div>
                 <div class="dm-card__title">All Requests</div>
                 <div class="dm-card__hint">Click on a demand to view details</div>
             </div>
-            <span class="dm-badge dm-badge--info">@(_items?.Count ?? 0) Total</span>
+            <span class="dm-badge dm-badge--info">@(Filtered.Count) of @(_items?.Count ?? 0)</span>
         </div>
 
         @if (_items is null)
         {
             <div class="dm-loading">Loading...</div>
         }
-        else if (_items.Count == 0)
+        else if (Filtered.Count == 0)
         {
             <div class="dm-empty">
-                <div class="dm-empty__text">No demands found.</div>
-                <a href="/demands/new" class="dm-btn dm-btn--primary">Submit your first request</a>
+                <div class="dm-empty__text">No demands match your filters.</div>
+                @if (_items.Count == 0)
+                {
+                    <a href="/demands/new" class="dm-btn dm-btn--primary">Submit your first request</a>
+                }
+                else
+                {
+                    <button class="dm-btn dm-btn--ghost" @onclick="ClearFilters">Clear filters</button>
+                }
             </div>
         }
         else
         {
             <div class="dm-demandlist">
-                @foreach (var d in _items)
+                @foreach (var d in Filtered)
                 {
-                    <a href="@($"/demands/{d.Id}")" class="dm-demand-row">
+                    <a href="@($"/demands/{d.Id}")" class="dm-demand-row @(d.Status == "NeedsInfo" && _userRole == "Requester" ? "dm-demand-row--action" : "")">
                         <div class="dm-demand-row__main">
-                            <div class="dm-demand-row__title">@d.Title</div>
+                            <div class="dm-demand-row__title">
+                                @d.Title
+                                @if (d.Status == "NeedsInfo" && _userRole == "Requester")
+                                {
+                                    <span class="dm-action-badge">Action Required</span>
+                                }
+                            </div>
                             <div class="dm-demand-row__sub">
                                 <span>@d.BusinessUnit</span>
                                 <span class="dm-sep">|</span>
@@ -53,7 +105,7 @@
                             </div>
                         </div>
                         <div class="dm-demand-row__meta">
-                            <span class="dm-pillSmall dm-pillSmall--status">@d.Status</span>
+                            <span class="dm-pillSmall @(d.Status == "NeedsInfo" ? "dm-pillSmall--needsinfo" : "dm-pillSmall--status")">@d.Status</span>
                             <span class="dm-pillSmall">Urg @d.Urgency</span>
                             @if (d.WeightedScore is not null)
                             {
@@ -73,10 +125,60 @@
 
 @code {
     private List<DemandManagement2.Ui.Services.DemandListItem>? _items;
+    private string _searchText = "";
+    private string _statusFilter = "";
+    private string _typeFilter = "";
+    private string _userRole = "";
+    private string _userName = "";
+    private int _needsInfoCount;
+
+    private List<DemandManagement2.Ui.Services.DemandListItem> Filtered =>
+        _items?.Where(d =>
+        {
+            // Requesters only see their own demands
+            if (_userRole == "Requester"
+                && !string.Equals(d.RequestedBy, _userName, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (!string.IsNullOrEmpty(_searchText))
+            {
+                var q = _searchText.Trim();
+                if (!d.Title.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    && !d.BusinessUnit.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    && !d.RequestedBy.Contains(q, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+            if (!string.IsNullOrEmpty(_statusFilter)
+                && !string.Equals(d.Status, _statusFilter, StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (!string.IsNullOrEmpty(_typeFilter)
+                && !string.Equals(d.Type.ToString(), _typeFilter, StringComparison.OrdinalIgnoreCase))
+                return false;
+            return true;
+        }).ToList() ?? new();
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _userRole = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        _userName = user.Identity?.Name ?? "";
+
         _items = await Api.GetDemands();
+
+        if (_userRole == "Requester" && _items is not null)
+        {
+            _needsInfoCount = _items.Count(d =>
+                d.Status == "NeedsInfo"
+                && string.Equals(d.RequestedBy, _userName, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private void ClearFilters()
+    {
+        _searchText = "";
+        _statusFilter = "";
+        _typeFilter = "";
     }
 }
 
@@ -264,6 +366,107 @@
   background: rgba(255,255,255,.04);
   border-color: rgba(255,255,255,.1);
   color: var(--dm-faint);
+}
+
+/* Filter bar */
+.dm-filterbar{
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dm-search{
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s ease;
+}
+.dm-search::placeholder{ color: var(--dm-faint); }
+.dm-search:focus{ border-color: rgba(37,99,235,.5); }
+
+.dm-select{
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--dm-border);
+  background: rgba(255,255,255,.04);
+  color: var(--dm-text);
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+.dm-select:focus{ border-color: rgba(37,99,235,.5); }
+.dm-select option{ background: #0f172a; color: var(--dm-text); }
+
+.dm-btn--sm{ padding: 8px 12px; font-size: 13px; }
+
+/* NeedsInfo alert banner */
+.dm-alert{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.dm-alert--warning{
+  background: rgba(245,158,11,.12);
+  border: 1px solid rgba(245,158,11,.3);
+  color: #fde68a;
+}
+.dm-alert__icon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(245,158,11,.25);
+  color: #fbbf24;
+  font-weight: 900;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Action Required badge on demand rows */
+.dm-action-badge{
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  background: rgba(245,158,11,.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245,158,11,.3);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Highlighted row for NeedsInfo */
+.dm-demand-row--action{
+  border-color: rgba(245,158,11,.35) !important;
+  background: rgba(245,158,11,.06) !important;
+}
+.dm-demand-row--action:hover{
+  background: rgba(245,158,11,.12) !important;
+}
+
+/* NeedsInfo status pill */
+.dm-pillSmall--needsinfo{
+  background: rgba(245,158,11,.18);
+  border-color: rgba(245,158,11,.35);
+  color: #fde68a;
 }
 
 @@media (max-width: 700px){

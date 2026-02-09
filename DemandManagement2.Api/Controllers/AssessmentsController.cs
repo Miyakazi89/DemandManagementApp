@@ -2,11 +2,13 @@ using DemandManagement2.Api.Dtos;
 using DemandManagement2.Api.Services;
 using DemandManagement2.Domain.Entities;
 using DemandManagement2.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DemandManagement2.Api.Controllers;
 
+[Authorize(Roles = "Admin,Assessor")]
 [ApiController]
 [Route("api/demands/{demandId:guid}/assessment")]
 public class AssessmentsController : ControllerBase
@@ -63,6 +65,16 @@ public class AssessmentsController : ControllerBase
         // Business rule: once assessed, move to UnderReview (if still in Intake)
         if (demand.Status == DemandStatus.Intake)
             demand.Status = DemandStatus.UnderReview;
+
+        // Record timeline event
+        var userName = User.Identity?.Name ?? dto.AssessedBy;
+        _db.DemandEvents.Add(new DemandEvent
+        {
+            DemandRequestId = demandId,
+            EventType = "Assessed",
+            Description = $"Assessment completed by {userName} (Score: {a.WeightedScore:F1})",
+            PerformedBy = userName
+        });
 
         await _db.SaveChangesAsync();
         return NoContent();

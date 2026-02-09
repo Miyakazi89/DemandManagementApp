@@ -7,7 +7,8 @@ public enum DemandStatus
     Prioritized = 2,
     Approved = 3,
     Backlog = 4,
-    Rejected = 5
+    Rejected = 5,
+    NeedsInfo = 6
 }
 
 public enum DemandType
@@ -36,9 +37,14 @@ public class DemandRequest
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    // SLA / Target date
+    public DateTime? TargetDate { get; set; }
+
     // Navigation
     public Assessment? Assessment { get; set; }
     public ApprovalDecision? Approval { get; set; }
     public ICollection<DecisionNote> DecisionNotes { get; set; } = new List<DecisionNote>();
     public ICollection<ResourceAllocation> ResourceAllocations { get; set; } = new List<ResourceAllocation>();
+    public ICollection<DemandEvent> Events { get; set; } = new List<DemandEvent>();
+    public ICollection<DemandAttachment> Attachments { get; set; } = new List<DemandAttachment>();
 }

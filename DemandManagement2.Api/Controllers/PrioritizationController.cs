@@ -1,12 +1,12 @@
 using DemandManagement2.Api.Dtos;
 using DemandManagement2.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace DemandManagement2.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/prioritization")]
 public class PrioritizationController : ControllerBase
@@ -25,14 +25,15 @@ public class PrioritizationController : ControllerBase
             .Select(d => new DemandListItemDto(
                 d.Id,
                 d.Title,
-                d.Type,
-                d.Status,
+                d.Type.ToString(),
+                d.Status.ToString(),
                 d.BusinessUnit,
                 d.RequestedBy,
                 d.Urgency,
                 d.EstimatedEffort,
                 d.Assessment != null ? d.Assessment.WeightedScore : null,
-                d.CreatedAtUtc
+                d.CreatedAtUtc,
+                d.TargetDate
             ))
             .ToListAsync();
 

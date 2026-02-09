@@ -13,6 +13,9 @@ public class AppDbContext : DbContext
     public DbSet<Resource> Resources => Set<Resource>();
     public DbSet<ResourceAllocation> ResourceAllocations => Set<ResourceAllocation>();
     public DbSet<DecisionNote> DecisionNotes => Set<DecisionNote>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<DemandEvent> DemandEvents => Set<DemandEvent>();
+    public DbSet<DemandAttachment> DemandAttachments => Set<DemandAttachment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,10 +39,28 @@ public class AppDbContext : DbContext
             .WithOne(a => a.DemandRequest)
             .HasForeignKey(a => a.DemandRequestId);
 
+        modelBuilder.Entity<DemandRequest>()
+            .HasMany(d => d.Events)
+            .WithOne(e => e.DemandRequest)
+            .HasForeignKey(e => e.DemandRequestId);
+
+        modelBuilder.Entity<DemandRequest>()
+            .HasMany(d => d.Attachments)
+            .WithOne(a => a.DemandRequest)
+            .HasForeignKey(a => a.DemandRequestId);
+
         modelBuilder.Entity<Resource>()
             .HasMany(r => r.Allocations)
             .WithOne(a => a.Resource)
             .HasForeignKey(a => a.ResourceId);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .Property(u => u.Role)
+            .HasConversion<string>();
 
         base.OnModelCreating(modelBuilder);
     }

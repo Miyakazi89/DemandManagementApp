@@ -1,11 +1,13 @@
 using DemandManagement2.Api.Dtos;
 using DemandManagement2.Domain.Entities;
 using DemandManagement2.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DemandManagement2.Api.Controllers;
 
+[Authorize(Roles = "Admin,Assessor")]
 [ApiController]
 [Route("api/demands/{demandId:guid}/approval")]
 public class ApprovalsController : ControllerBase
@@ -61,6 +63,16 @@ public class ApprovalsController : ControllerBase
             ApprovalStatus.OnHold => DemandStatus.Backlog,
             _ => demand.Status
         };
+
+        // Record timeline event
+        var userName = User.Identity?.Name ?? dto.DecisionBy;
+        _db.DemandEvents.Add(new DemandEvent
+        {
+            DemandRequestId = demandId,
+            EventType = dto.Status.ToString(),
+            Description = $"Demand {dto.Status.ToString().ToLower()} by {userName}",
+            PerformedBy = userName
+        });
 
         await _db.SaveChangesAsync();
         return NoContent();

@@ -164,3 +164,7 @@ C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandM
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Api\obj\Debug\net10.0\DemandManagement2.Api.genruntimeconfig.cache
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Api\obj\Debug\net10.0\ref\DemandManagement2.Api.dll
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Api\obj\Debug\net10.0\DemandManagement2.Api.sourcelink.json
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Api\bin\Debug\net10.0\BCrypt.Net-Next.dll
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Api\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Api\bin\Debug\net10.0\DemandManagement2.Api.staticwebassets.runtime.json
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Api\obj\Debug\net10.0\compressed\pzlyhq04qa-{0}-i21ahtvi5x-i21ahtvi5x.gz

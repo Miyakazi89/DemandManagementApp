@@ -1,10 +1,12 @@
 using DemandManagement2.Domain.Entities;
 using DemandManagement2.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DemandManagement2.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/capacity")]
 public class CapacityController : ControllerBase

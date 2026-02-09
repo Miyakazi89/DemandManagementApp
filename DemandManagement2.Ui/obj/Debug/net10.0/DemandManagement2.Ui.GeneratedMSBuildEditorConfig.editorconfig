@@ -54,6 +54,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Miyakazi.Mafuduka/OneDrive - barloworld-equipment.com/Documents/DemandManagementApp2/DemandManagement2.Ui/Components/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xMb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Miyakazi.Mafuduka/OneDrive - barloworld-equipment.com/Documents/DemandManagementApp2/DemandManagement2.Ui/Components/Pages/NewDemand.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xOZXdEZW1hbmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -66,12 +70,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQcmlvcml0aXphdGlvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Miyakazi.Mafuduka/OneDrive - barloworld-equipment.com/Documents/DemandManagementApp2/DemandManagement2.Ui/Components/Pages/Register.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xSZWdpc3Rlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Miyakazi.Mafuduka/OneDrive - barloworld-equipment.com/Documents/DemandManagementApp2/DemandManagement2.Ui/Components/Pages/Weather.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xXZWF0aGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Miyakazi.Mafuduka/OneDrive - barloworld-equipment.com/Documents/DemandManagementApp2/DemandManagement2.Ui/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Miyakazi.Mafuduka/OneDrive - barloworld-equipment.com/Documents/DemandManagementApp2/DemandManagement2.Ui/Components/Shared/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaGFyZWRcUmVkaXJlY3RUb0xvZ2luLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Miyakazi.Mafuduka/OneDrive - barloworld-equipment.com/Documents/DemandManagementApp2/DemandManagement2.Ui/Components/_Imports.razor]

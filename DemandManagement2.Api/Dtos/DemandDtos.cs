@@ -4,7 +4,7 @@ using DemandManagement2.Domain.Entities;
 namespace DemandManagement2.Api.Dtos;
 
 
-public record DemandListItem(
+public record DemandListItemDto(
     Guid Id,
     string Title,
     string Type,
@@ -14,7 +14,8 @@ public record DemandListItem(
     int Urgency,
     int EstimatedEffort,
     decimal? WeightedScore,
-    DateTime CreatedAtUtc
+    DateTime CreatedAtUtc,
+    DateTime? TargetDate
 );
 
 
@@ -31,7 +32,10 @@ public record DemandDetailsDto(
     decimal? WeightedScore,
     AssessmentDto? Assessment,
     ApprovalDto? Approval,
-    DateTime CreatedAtUtc
+    DateTime CreatedAtUtc,
+    DateTime? TargetDate,
+    List<DemandEventDto> Events,
+    List<DemandAttachmentDto> Attachments
 );
 
 public class CreateDemandRequestDto
@@ -56,4 +60,29 @@ public class CreateDemandRequestDto
 
     [Range(1, 5)]
     public int EstimatedEffort { get; set; }
+
+    public DateTime? TargetDate { get; set; }
+}
+
+public record DemandEventDto(
+    Guid Id,
+    string EventType,
+    string Description,
+    string PerformedBy,
+    DateTime OccurredAtUtc
+);
+
+public record DemandAttachmentDto(
+    Guid Id,
+    string FileName,
+    string ContentType,
+    long FileSizeBytes,
+    string UploadedBy,
+    DateTime UploadedAtUtc,
+    string DownloadUrl
+);
+
+public class RequestInfoDto
+{
+    public string Message { get; set; } = string.Empty;
 }
