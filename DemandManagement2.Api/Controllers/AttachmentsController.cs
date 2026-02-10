@@ -72,6 +72,7 @@ public class AttachmentsController : ControllerBase
         return Ok(new { attachment.Id, attachment.FileName });
     }
 
+    [AllowAnonymous]
     [HttpGet("{attachmentId:guid}")]
     public async Task<ActionResult> Download(Guid demandId, Guid attachmentId)
     {

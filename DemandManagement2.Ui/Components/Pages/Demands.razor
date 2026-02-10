@@ -8,7 +8,16 @@
         <div>
             <div class="dm-pill">Demands</div>
             <h1 class="dm-title">Demand Requests</h1>
-            <p class="dm-subtitle">View and manage all demand requests in the system.</p>
+            <p class="dm-subtitle">
+                @if (_userRole == "Requester")
+                {
+                    <text>View and manage your submitted demand requests.</text>
+                }
+                else
+                {
+                    <text>View and manage all demand requests in the system.</text>
+                }
+            </p>
         </div>
         <div class="dm-actions">
             <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>

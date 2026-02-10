@@ -24,6 +24,14 @@ public class DemandsController : ControllerBase
             .Include(d => d.Assessment)
             .AsQueryable();
 
+        // Requesters can only see their own demands
+        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (role == "Requester")
+        {
+            var userName = User.Identity?.Name ?? "";
+            query = query.Where(d => d.RequestedBy == userName);
+        }
+
         if (status is not null) query = query.Where(d => d.Status == status);
         if (type is not null) query = query.Where(d => d.Type == type);
 
@@ -58,6 +66,15 @@ public class DemandsController : ControllerBase
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (d is null) return NotFound();
+
+        // Requesters can only view their own demands
+        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (role == "Requester")
+        {
+            var userName = User.Identity?.Name ?? "";
+            if (!string.Equals(d.RequestedBy, userName, StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+        }
 
         var a = d.Assessment;
 

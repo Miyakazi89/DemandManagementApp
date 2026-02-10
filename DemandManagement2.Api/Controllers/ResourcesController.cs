@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DemandManagement2.Api.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Assessor")]
 [ApiController]
 [Route("api/resources")]
 public class ResourcesController : ControllerBase

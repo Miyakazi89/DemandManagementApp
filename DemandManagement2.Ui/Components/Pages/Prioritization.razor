@@ -1,6 +1,7 @@
 @page "/prioritization"
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="dm-page">
     <div class="dm-page__header">
@@ -16,6 +17,17 @@
         </div>
     </div>
 
+    @if (!_hasAccess)
+    {
+        <div class="dm-access-denied">
+            <div class="dm-access-denied__icon">&#128274;</div>
+            <div class="dm-access-denied__title">Access Restricted</div>
+            <div class="dm-access-denied__msg">The Prioritization view is available to <strong>Admin</strong> and <strong>Assessor</strong> roles only. As a Requester, you can track your own demands from the <a href="/demands">Demand Requests</a> page.</div>
+            <a href="/demands" class="dm-btn dm-btn--primary">Go to My Demands</a>
+        </div>
+    }
+    else
+    {
     <div class="dm-card">
         <div class="dm-card__header">
             <div>
@@ -63,14 +75,23 @@
             </div>
         }
     </div>
+    }
 </div>
 
 @code {
     private List<DemandManagement2.Ui.Services.DemandListItem>? _items;
+    private bool _hasAccess = true;
 
     protected override async Task OnInitializedAsync()
     {
-        _items = await Api.Prioritization();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var role = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        _hasAccess = role == "Admin" || role == "Assessor";
+
+        if (_hasAccess)
+        {
+            _items = await Api.Prioritization();
+        }
     }
 }
 
@@ -268,6 +289,19 @@
   border-color: rgba(34,197,94,.25);
   color: #bbf7d0;
 }
+
+/* Access Denied */
+.dm-access-denied{
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+}
+.dm-access-denied__icon{ font-size: 48px; margin-bottom: 16px; }
+.dm-access-denied__title{ font-size: 22px; font-weight: 900; color: var(--dm-text); margin-bottom: 10px; }
+.dm-access-denied__msg{ color: var(--dm-muted); max-width: 500px; margin: 0 auto 20px; line-height: 1.6; }
+.dm-access-denied__msg a{ color: #93c5fd; text-decoration: underline; }
 
 @@media (max-width: 700px){
   .dm-page__header{ flex-direction: column; }

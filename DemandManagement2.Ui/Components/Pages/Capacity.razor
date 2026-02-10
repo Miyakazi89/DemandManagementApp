@@ -1,6 +1,7 @@
 @page "/capacity"
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="dm-page">
     <div class="dm-page__header">
@@ -12,11 +13,23 @@
         <div class="dm-actions">
             <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
             <a href="/demands" class="dm-btn dm-btn--ghost">Demands</a>
-            <button class="dm-btn dm-btn--primary" @onclick="() => _showAddResource = true">+ Add Resource</button>
+            @if (_hasAccess)
+            {
+                <button class="dm-btn dm-btn--primary" @onclick="() => _showAddResource = true">+ Add Resource</button>
+            }
         </div>
     </div>
 
-    @if (_summary is null)
+    @if (!_hasAccess)
+    {
+        <div class="dm-access-denied">
+            <div class="dm-access-denied__icon">&#128274;</div>
+            <div class="dm-access-denied__title">Access Restricted</div>
+            <div class="dm-access-denied__msg">Capacity Planning is available to <strong>Admin</strong> and <strong>Assessor</strong> roles only. As a Requester, you can submit and track your demands from the <a href="/demands">Demand Requests</a> page.</div>
+            <a href="/demands" class="dm-btn dm-btn--primary">Go to My Demands</a>
+        </div>
+    }
+    else if (_summary is null)
     {
         <div class="dm-loading">Loading capacity data...</div>
     }
@@ -242,6 +255,7 @@
 
     private bool _showAddResource;
     private bool _showAddAllocation;
+    private bool _hasAccess = true;
     private DemandManagement2.Ui.Services.CreateResourceRequest _newResource = new();
     private DemandManagement2.Ui.Services.CreateAllocationRequest _newAllocation = new()
     {
@@ -253,7 +267,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var role = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        _hasAccess = role == "Admin" || role == "Assessor";
+
+        if (_hasAccess)
+        {
+            await LoadData();
+        }
     }
 
     private async Task LoadData()
@@ -545,6 +566,19 @@
   font-size: 13px;
   color: var(--dm-success);
 }
+
+/* Access Denied */
+.dm-access-denied{
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--dm-border);
+  border-radius: 16px;
+}
+.dm-access-denied__icon{ font-size: 48px; margin-bottom: 16px; }
+.dm-access-denied__title{ font-size: 22px; font-weight: 900; color: var(--dm-text); margin-bottom: 10px; }
+.dm-access-denied__msg{ color: var(--dm-muted); max-width: 500px; margin: 0 auto 20px; line-height: 1.6; }
+.dm-access-denied__msg a{ color: #93c5fd; text-decoration: underline; }
 
 @@media (max-width: 900px){
   .dm-grid--4{ grid-template-columns: repeat(2, 1fr); }

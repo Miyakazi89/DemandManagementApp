@@ -1,6 +1,7 @@
 @page "/dashboard"
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -9,7 +10,24 @@
         <div>
             <div class="dm-pill">Dashboard</div>
             <h1 class="dm-title">Summary</h1>
-            <p class="dm-subtitle">Quick overview of demand flow and what needs attention.</p>
+            <p class="dm-subtitle">
+                @if (_userRole == "Admin")
+                {
+                    <text>Welcome, Admin. You have full access to manage all demands, assessments, approvals, and resources.</text>
+                }
+                else if (_userRole == "Assessor")
+                {
+                    <text>Welcome, Assessor. You can review, assess, and approve demand requests.</text>
+                }
+                else if (_userRole == "Requester")
+                {
+                    <text>Welcome! You can submit new demands and track your existing requests.</text>
+                }
+                else
+                {
+                    <text>Quick overview of demand flow and what needs attention.</text>
+                }
+            </p>
         </div>
 
         <div class="dm-actions">
@@ -184,8 +202,14 @@
 
     private List<DemandManagement2.Ui.Services.DemandListItem>? _top = new();
     private List<DemandManagement2.Ui.Services.DemandListItem>? _allDemands = new();
+    private string _userRole = "";
 
-    protected override async Task OnInitializedAsync() => await Load();
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _userRole = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        await Load();
+    }
 
     private async Task Refresh() => await Load();
 
