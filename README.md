@@ -180,9 +180,29 @@ DemandManagementApp2/
 
 | Role        | Description                                                |
 |-------------|------------------------------------------------------------|
-| **Admin**     | Full access: manage demands, assess, approve, delete, manage resources |
-| **Assessor**  | Assess demands, approve/reject, request info, manage notes |
-| **Requester** | Submit demands, edit own demands (Intake/NeedsInfo), view status |
+| **Admin**     | Full access: manage all demands, assess, approve, delete, manage resources & capacity |
+| **Assessor**  | Assess demands, approve/reject, request info, manage notes, manage resources & capacity |
+| **Requester** | Submit demands, edit own demands (Intake/NeedsInfo only), view own demands only |
+
+### Role-Based Access Matrix
+
+| Feature                    | Admin | Assessor | Requester |
+|----------------------------|-------|----------|-----------|
+| Dashboard                  | Full  | Full     | Own demands only |
+| View all demands           | Yes   | Yes      | No (own only) |
+| View demand details        | Any   | Any      | Own only |
+| Submit new demand          | Yes   | Yes      | Yes |
+| Edit demand                | Yes   | Yes      | Own (Intake/NeedsInfo) |
+| Assess demand              | Yes   | Yes      | No |
+| Approve/Reject demand      | Yes   | Yes      | No |
+| Request additional info    | Yes   | Yes      | No |
+| Delete demand              | Yes   | Yes      | No |
+| Prioritization page        | Yes   | Yes      | Access denied message |
+| Capacity Planning page     | Yes   | Yes      | Access denied message |
+| Manage resources           | Yes   | Yes      | No |
+| Download attachments       | Yes   | Yes      | Yes (own demands) |
+| Delete attachments         | Yes   | Yes      | No |
+| Decision notes             | Yes   | Yes      | View only |
 
 ### Auth Flow
 
@@ -192,7 +212,10 @@ DemandManagementApp2/
 4. `JwtAuthenticationStateProvider` decodes the JWT and exposes user claims.
 5. `DemandApiClient` attaches the Bearer token to every API request.
 6. API endpoints enforce role restrictions via `[Authorize(Roles = "...")]`.
-7. UI components conditionally render based on `AuthenticationState`.
+7. API enforces demand ownership - Requesters can only access their own demands (server-side filtering).
+8. UI components conditionally render based on `AuthenticationState`.
+9. Navigation menu hides restricted pages (Prioritization, Capacity) from Requesters.
+10. Restricted pages show meaningful "Access Restricted" messages with redirect links.
 
 ### JWT Configuration
 
@@ -283,8 +306,8 @@ Base URL: `http://localhost:5182`
 
 | Method | Endpoint                            | Auth             | Description                        |
 |--------|-------------------------------------|------------------|------------------------------------|
-| GET    | `/api/demands`                      | Authenticated    | List demands (filter: ?status, ?type) |
-| GET    | `/api/demands/{id}`                 | Authenticated    | Get demand details with related data |
+| GET    | `/api/demands`                      | Authenticated    | List demands (Requesters: own only; filter: ?status, ?type) |
+| GET    | `/api/demands/{id}`                 | Authenticated    | Get demand details (Requesters: own only, 403 otherwise) |
 | POST   | `/api/demands`                      | Authenticated    | Create a new demand                |
 | PUT    | `/api/demands/{id}`                 | Authenticated    | Update demand (Requester: Intake/NeedsInfo only) |
 | PATCH  | `/api/demands/{id}/request-info`    | Admin, Assessor  | Request additional info from submitter |
@@ -319,7 +342,7 @@ Base URL: `http://localhost:5182`
 | Method | Endpoint                                              | Auth             | Description                    |
 |--------|-------------------------------------------------------|------------------|--------------------------------|
 | POST   | `/api/demands/{demandId}/attachments`                 | Authenticated    | Upload file (max 10MB)         |
-| GET    | `/api/demands/{demandId}/attachments/{attachmentId}`  | Authenticated    | Download file                  |
+| GET    | `/api/demands/{demandId}/attachments/{attachmentId}`  | Public           | Download file (GUID-based URLs) |
 | DELETE | `/api/demands/{demandId}/attachments/{attachmentId}`  | Admin, Assessor  | Delete file                    |
 
 **Allowed file types:** `.pdf`, `.doc`, `.docx`, `.xls`, `.xlsx`, `.ppt`, `.pptx`, `.png`, `.jpg`, `.jpeg`, `.txt`, `.csv`, `.zip`
@@ -341,11 +364,11 @@ Base URL: `http://localhost:5182`
 
 | Method | Endpoint               | Auth  | Description                        |
 |--------|------------------------|-------|------------------------------------|
-| GET    | `/api/resources`       | Admin | List all active resources          |
-| GET    | `/api/resources/{id}`  | Admin | Get single resource                |
-| POST   | `/api/resources`       | Admin | Create resource                    |
-| PUT    | `/api/resources/{id}`  | Admin | Update resource                    |
-| DELETE | `/api/resources/{id}`  | Admin | Soft-delete resource (IsActive=false) |
+| GET    | `/api/resources`       | Admin, Assessor | List all active resources          |
+| GET    | `/api/resources/{id}`  | Admin, Assessor | Get single resource                |
+| POST   | `/api/resources`       | Admin, Assessor | Create resource                    |
+| PUT    | `/api/resources/{id}`  | Admin, Assessor | Update resource                    |
+| DELETE | `/api/resources/{id}`  | Admin, Assessor | Soft-delete resource (IsActive=false) |
 
 ### Capacity (`/api/capacity`)
 
@@ -366,12 +389,12 @@ Base URL: `http://localhost:5182`
 | `/`                      | Home              | Public        | Landing page with overview KPIs and navigation     |
 | `/login`                 | Login             | Public        | Email/password login form                          |
 | `/register`              | Register          | Public        | User registration with role selection              |
-| `/dashboard`             | Dashboard         | Authenticated | KPI cards, highlights, top priorities              |
-| `/demands`               | Demands           | Authenticated | Searchable demand list with filters                |
-| `/demands/new`           | New Demand        | Authenticated | Create demand form with file upload                |
-| `/demands/{id}`          | Demand Details    | Authenticated | Full detail view with assessment, approval, notes  |
-| `/prioritization`        | Prioritization    | Authenticated | Score-sorted demand ranking                        |
-| `/capacity`              | Capacity          | Authenticated | Resource capacity planning and forecast            |
+| `/dashboard`             | Dashboard         | Authenticated | KPI cards, highlights, top priorities (role-aware welcome message) |
+| `/demands`               | Demands           | Authenticated | Demand list (Requesters see own only, Admin/Assessor see all) |
+| `/demands/new`           | New Demand        | Authenticated | Create demand form with file upload (all roles) |
+| `/demands/{id}`          | Demand Details    | Authenticated | Full detail view (Requesters: own only, 403 otherwise) |
+| `/prioritization`        | Prioritization    | Admin, Assessor | Score-sorted demand ranking (Requesters see access denied) |
+| `/capacity`              | Capacity          | Admin, Assessor | Resource capacity planning (Requesters see access denied) |
 
 ---
 
@@ -430,6 +453,19 @@ Events are displayed chronologically with color-coded timeline dots.
 - KPI summary cards (Total, Intake, Under Review, Awaiting Approval)
 - High-urgency demand highlights
 - Top 5 priorities by weighted score
+- Role-aware welcome message describing each role's capabilities
+
+### Demand Ownership & Data Isolation
+
+- **Server-side enforcement**: The API filters demands by `RequestedBy` for Requester role users. Requesters only receive their own demands from `GET /api/demands`.
+- **Detail access control**: `GET /api/demands/{id}` returns `403 Forbidden` if a Requester attempts to access a demand that doesn't belong to them.
+- **UI reinforcement**: The Demands page shows "View and manage your submitted demand requests" for Requesters vs. "View and manage all demand requests" for Admin/Assessor.
+
+### Navigation & Access Control
+
+- **Dynamic navigation**: The sidebar hides Prioritization and Capacity Planning links for Requester users.
+- **Access denied pages**: If a Requester navigates directly to `/prioritization` or `/capacity`, they see a styled "Access Restricted" message explaining the page is for Admin/Assessor roles, with a redirect link to their demands.
+- **Contextual messaging**: Each page shows role-appropriate descriptions and instructions.
 
 ---
 
@@ -476,10 +512,10 @@ dotnet test
 
 | Test Class              | Tests | Description                                    |
 |-------------------------|-------|------------------------------------------------|
-| `ScoringServiceTests`  | 7     | Weighted score algorithm validation            |
+| `ScoringServiceTests`  | 9     | Weighted score algorithm validation            |
 | `NpvCalculationTests`  | 7     | Net Present Value calculation verification     |
 
-**Total: 14 tests**
+**Total: 16 tests**
 
 ---
 
