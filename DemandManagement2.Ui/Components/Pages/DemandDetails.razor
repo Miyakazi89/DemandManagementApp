@@ -252,6 +252,19 @@
                         </div>
                     }
 
+                    <div class="dm-divider"></div>
+                    <div class="dm-card__hint">Budget Breakdown</div>
+
+                    <div class="dm-form-row">
+                        <label>CapEx Amount</label>
+                        <input class="dm-input" type="number" step="0.01" min="0" @bind="_assessment.CapExAmount" />
+                    </div>
+
+                    <div class="dm-form-row">
+                        <label>OpEx Amount</label>
+                        <input class="dm-input" type="number" step="0.01" min="0" @bind="_assessment.OpExAmount" />
+                    </div>
+
                     <div class="dm-form-row">
                         <label>Assessed By</label>
                         <input class="dm-input" @bind="_assessment.AssessedBy" placeholder="Your name" />
@@ -580,6 +593,9 @@
                 AnnualBenefit = a.AnnualBenefit,
                 ProjectYears = a.ProjectYears,
                 DiscountRate = a.DiscountRate,
+
+                CapExAmount = a.CapExAmount,
+                OpExAmount = a.OpExAmount,
 
                 AssessedBy = a.AssessedBy
             };

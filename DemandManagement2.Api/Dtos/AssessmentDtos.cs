@@ -16,6 +16,10 @@ public class CreateOrUpdateAssessmentDto
     [Range(0, 50)] public int ProjectYears { get; set; }                      // Project duration (years)
     [Range(0, 100)] public decimal DiscountRate { get; set; }                 // Discount rate (%)
 
+    // Budget breakdown
+    [Range(0, double.MaxValue)] public decimal CapExAmount { get; set; }
+    [Range(0, double.MaxValue)] public decimal OpExAmount { get; set; }
+
     [Required, MinLength(2), MaxLength(200)]
     public string AssessedBy { get; set; } = string.Empty;
 }
@@ -36,6 +40,10 @@ public record AssessmentDto(
     int ProjectYears,
     decimal DiscountRate,
     decimal CalculatedNPV,
+
+    // Budget breakdown
+    decimal CapExAmount,
+    decimal OpExAmount,
 
     string AssessedBy,
     DateTime AssessedAtUtc

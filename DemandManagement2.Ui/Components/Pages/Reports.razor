@@ -1,0 +1,298 @@
+@page "/reports"
+@rendermode InteractiveServer
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+
+<div class="dm-page">
+    <div class="dm-page__header">
+        <div>
+            <div class="dm-pill">Analytics</div>
+            <h1 class="dm-title">Reports & Export</h1>
+            <p class="dm-subtitle">Filter demands and export to Excel, CSV, or PDF.</p>
+        </div>
+        <div class="dm-actions">
+            <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+            <a href="/demands" class="dm-btn dm-btn--ghost">Demands</a>
+        </div>
+    </div>
+
+    @if (!_hasAccess)
+    {
+        <div class="dm-access-denied">
+            <div class="dm-access-denied__icon">&#128274;</div>
+            <div class="dm-access-denied__title">Access Restricted</div>
+            <div class="dm-access-denied__msg">Reports are available to <strong>Admin</strong> and <strong>Assessor</strong> roles only.</div>
+            <a href="/demands" class="dm-btn dm-btn--primary">Go to My Demands</a>
+        </div>
+    }
+    else
+    {
+        <!-- Filters -->
+        <div class="dm-card dm-mb">
+            <div class="dm-card__header">
+                <div class="dm-card__title">Filter Criteria</div>
+            </div>
+            <div class="dm-grid dm-grid--4 dm-gap dm-filter-row">
+                <div class="dm-form-group">
+                    <label class="dm-label">Status</label>
+                    <select class="dm-select" @bind="_filter.Status">
+                        <option value="">All Statuses</option>
+                        <option value="Intake">Intake</option>
+                        <option value="UnderReview">Under Review</option>
+                        <option value="Prioritized">Prioritized</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Backlog">Backlog</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="NeedsInfo">Needs Info</option>
+                    </select>
+                </div>
+                <div class="dm-form-group">
+                    <label class="dm-label">Type</label>
+                    <select class="dm-select" @bind="_filter.Type">
+                        <option value="">All Types</option>
+                        <option value="Project">Project</option>
+                        <option value="Enhancement">Enhancement</option>
+                        <option value="Service">Service</option>
+                        <option value="ResourceRequest">Resource Request</option>
+                    </select>
+                </div>
+                <div class="dm-form-group">
+                    <label class="dm-label">Business Unit</label>
+                    <input class="dm-input" @bind="_filter.BusinessUnit" placeholder="Filter by unit..." />
+                </div>
+                <div class="dm-form-group">
+                    <label class="dm-label">Date Range</label>
+                    <div class="dm-date-range">
+                        <input type="date" class="dm-input" @bind="_fromDateStr" />
+                        <span class="dm-date-sep">to</span>
+                        <input type="date" class="dm-input" @bind="_toDateStr" />
+                    </div>
+                </div>
+            </div>
+            <div class="dm-filter-actions">
+                <button class="dm-btn dm-btn--primary" @onclick="ApplyFilters">Apply Filters</button>
+                <button class="dm-btn dm-btn--ghost" @onclick="ClearFilters">Clear</button>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="dm-export-bar dm-mb">
+            <span class="dm-export-label">@(_rows?.Count ?? 0) results</span>
+            <div class="dm-export-actions">
+                <button class="dm-btn dm-btn--ghost" @onclick="ExportCsv" disabled="@_exporting">CSV</button>
+                <button class="dm-btn dm-btn--ghost" @onclick="ExportExcel" disabled="@_exporting">Excel</button>
+                <button class="dm-btn dm-btn--ghost" @onclick="ExportPdf" disabled="@_exporting">PDF</button>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        @if (_loading)
+        {
+            <div class="dm-loading">Loading report data...</div>
+        }
+        else if (_rows is not null)
+        {
+            <div class="dm-card">
+                <div class="dm-table-wrap">
+                    <table class="dm-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Business Unit</th>
+                                <th>Urgency</th>
+                                <th>Score</th>
+                                <th>NPV</th>
+                                <th>Approval</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in _rows)
+                            {
+                                <tr>
+                                    <td><a href="/demands/@r.Id" class="dm-link">@r.Title</a></td>
+                                    <td>@r.Type</td>
+                                    <td><span class="dm-pillSmall dm-pillSmall--@r.Status.ToLower()">@r.Status</span></td>
+                                    <td>@r.BusinessUnit</td>
+                                    <td>@r.Urgency</td>
+                                    <td>@(r.WeightedScore?.ToString("F1") ?? "-")</td>
+                                    <td>@(r.CalculatedNPV?.ToString("C0") ?? "-")</td>
+                                    <td>@(r.ApprovalStatus ?? "-")</td>
+                                    <td>@r.CreatedAtUtc.ToString("yyyy-MM-dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (_rows.Count == 0)
+                {
+                    <div class="dm-empty">No demands match the selected filters.</div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private bool _hasAccess;
+    private bool _loading;
+    private bool _exporting;
+    private ReportFilter _filter = new();
+    private List<ReportRow>? _rows;
+    private DateTime? _fromDateStr;
+    private DateTime? _toDateStr;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var role = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        _hasAccess = role == "Admin" || role == "Assessor";
+
+        if (_hasAccess)
+            await ApplyFilters();
+    }
+
+    private async Task ApplyFilters()
+    {
+        _loading = true;
+        _filter.FromDate = _fromDateStr;
+        _filter.ToDate = _toDateStr;
+
+        try { _rows = await Api.GetReport(_filter); }
+        catch { _rows = new(); }
+        _loading = false;
+    }
+
+    private void ClearFilters()
+    {
+        _filter = new();
+        _fromDateStr = null;
+        _toDateStr = null;
+        _ = ApplyFilters();
+    }
+
+    private async Task ExportCsv()
+    {
+        _exporting = true;
+        try
+        {
+            _filter.FromDate = _fromDateStr;
+            _filter.ToDate = _toDateStr;
+            var bytes = await Api.ExportReportCsv(_filter);
+            await DownloadFile("demands-report.csv", "text/csv", bytes);
+        }
+        catch { }
+        _exporting = false;
+    }
+
+    private async Task ExportExcel()
+    {
+        _exporting = true;
+        try
+        {
+            _filter.FromDate = _fromDateStr;
+            _filter.ToDate = _toDateStr;
+            var bytes = await Api.ExportReportExcel(_filter);
+            await DownloadFile("demands-report.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", bytes);
+        }
+        catch { }
+        _exporting = false;
+    }
+
+    private async Task ExportPdf()
+    {
+        _exporting = true;
+        try
+        {
+            _filter.FromDate = _fromDateStr;
+            _filter.ToDate = _toDateStr;
+            var bytes = await Api.ExportReportPdf(_filter);
+            await DownloadFile("demands-report.pdf", "application/pdf", bytes);
+        }
+        catch { }
+        _exporting = false;
+    }
+
+    private async Task DownloadFile(string fileName, string contentType, byte[] data)
+    {
+        var base64 = Convert.ToBase64String(data);
+        await JS.InvokeVoidAsync("downloadFile", fileName, contentType, base64);
+    }
+}
+
+<style>
+    .dm-page { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
+    .dm-page__header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+    .dm-pill { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #06b6d4; background: rgba(6,182,212,.10); padding: 4px 14px; border-radius: 20px; margin-bottom: 8px; }
+    .dm-title { font-size: 28px; font-weight: 800; color: #f8fafc; margin: 0 0 4px; }
+    .dm-subtitle { font-size: 14px; color: rgba(255,255,255,.58); margin: 0; }
+    .dm-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .dm-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: .15s; text-decoration: none; }
+    .dm-btn--primary { background: #2563eb; color: #fff; }
+    .dm-btn--primary:hover { background: #1d4ed8; }
+    .dm-btn--ghost { background: rgba(255,255,255,.06); color: rgba(255,255,255,.82); border: 1px solid rgba(255,255,255,.10); }
+    .dm-btn--ghost:hover { background: rgba(255,255,255,.12); }
+    .dm-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .dm-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 24px; }
+    .dm-card__header { margin-bottom: 16px; }
+    .dm-card__title { font-size: 16px; font-weight: 700; color: #f8fafc; }
+    .dm-mb { margin-bottom: 20px; }
+
+    .dm-grid { display: grid; gap: 16px; }
+    .dm-grid--4 { grid-template-columns: repeat(4, 1fr); }
+    .dm-gap { gap: 16px; }
+
+    .dm-form-group { display: flex; flex-direction: column; gap: 6px; }
+    .dm-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.58); text-transform: uppercase; letter-spacing: .5px; }
+    .dm-select, .dm-input { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: #f8fafc; padding: 9px 12px; font-size: 13px; width: 100%; }
+    .dm-select:focus, .dm-input:focus { outline: none; border-color: #2563eb; }
+
+    .dm-date-range { display: flex; gap: 8px; align-items: center; }
+    .dm-date-sep { color: rgba(255,255,255,.4); font-size: 12px; }
+
+    .dm-filter-actions { display: flex; gap: 10px; margin-top: 16px; }
+
+    .dm-export-bar { display: flex; justify-content: space-between; align-items: center; }
+    .dm-export-label { font-size: 14px; color: rgba(255,255,255,.58); font-weight: 600; }
+    .dm-export-actions { display: flex; gap: 8px; }
+
+    .dm-table-wrap { overflow-x: auto; }
+    .dm-table { width: 100%; border-collapse: collapse; }
+    .dm-table th { text-align: left; padding: 10px 14px; font-size: 11px; color: rgba(255,255,255,.52); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.10); font-weight: 600; }
+    .dm-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.06); color: rgba(255,255,255,.88); font-size: 13px; }
+    .dm-table tr:hover td { background: rgba(255,255,255,.03); }
+    .dm-link { color: #60a5fa; text-decoration: none; }
+    .dm-link:hover { text-decoration: underline; }
+
+    .dm-pillSmall { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .dm-pillSmall--intake { background: rgba(6,182,212,.15); color: #06b6d4; }
+    .dm-pillSmall--underreview { background: rgba(37,99,235,.15); color: #60a5fa; }
+    .dm-pillSmall--approved { background: rgba(34,197,94,.15); color: #22c55e; }
+    .dm-pillSmall--rejected { background: rgba(239,68,68,.15); color: #ef4444; }
+    .dm-pillSmall--backlog { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .dm-pillSmall--prioritized { background: rgba(139,92,246,.15); color: #a78bfa; }
+    .dm-pillSmall--needsinfo { background: rgba(245,158,11,.15); color: #f59e0b; }
+
+    .dm-empty { text-align: center; padding: 40px; color: rgba(255,255,255,.4); font-size: 14px; }
+    .dm-loading { text-align: center; padding: 60px; color: rgba(255,255,255,.5); font-size: 15px; }
+
+    .dm-access-denied { text-align: center; padding: 80px 20px; }
+    .dm-access-denied__icon { font-size: 48px; margin-bottom: 16px; }
+    .dm-access-denied__title { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    .dm-access-denied__msg { font-size: 14px; color: rgba(255,255,255,.58); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+    @@media (max-width: 900px) {
+        .dm-grid--4 { grid-template-columns: repeat(2, 1fr); }
+        .dm-page__header { flex-direction: column; }
+    }
+    @@media (max-width: 600px) {
+        .dm-grid--4 { grid-template-columns: 1fr; }
+        .dm-table { font-size: 12px; }
+    }
+</style>

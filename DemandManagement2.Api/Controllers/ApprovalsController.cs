@@ -1,4 +1,5 @@
 using DemandManagement2.Api.Dtos;
+using DemandManagement2.Api.Services;
 using DemandManagement2.Domain.Entities;
 using DemandManagement2.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +14,8 @@ namespace DemandManagement2.Api.Controllers;
 public class ApprovalsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public ApprovalsController(AppDbContext db) => _db = db;
+    private readonly IEmailService _email;
+    public ApprovalsController(AppDbContext db, IEmailService email) { _db = db; _email = email; }
 
     [HttpGet]
     public async Task<ActionResult<ApprovalDto>> Get(Guid demandId)
@@ -75,6 +77,11 @@ public class ApprovalsController : ControllerBase
         });
 
         await _db.SaveChangesAsync();
+
+        // Notify requester about approval decision
+        var requester = await _db.Users.FirstOrDefaultAsync(u => u.FullName == demand.RequestedBy);
+        await _email.SendDemandNotificationAsync(dto.Status.ToString(), demand.Id, demand.Title, requester?.Email);
+
         return NoContent();
     }
 }

@@ -1,13 +1,21 @@
 {
   "version": 2,
-  "dgSpecHash": "JNAXvSk+NK4=",
+  "dgSpecHash": "yXPEVmn7pno=",
   "success": true,
   "projectFilePath": "C:\\Users\\Miyakazi.Mafuduka\\OneDrive - barloworld-equipment.com\\Documents\\DemandManagementApp2\\DemandManagement2.Api\\DemandManagement2.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\bouncycastle.cryptography\\2.6.1\\bouncycastle.cryptography.2.6.1.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\closedxml\\0.105.0\\closedxml.0.105.0.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\closedxml.parser\\2.0.0\\closedxml.parser.2.0.0.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\documentformat.openxml\\3.1.1\\documentformat.openxml.3.1.1.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\documentformat.openxml.framework\\3.1.1\\documentformat.openxml.framework.3.1.1.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\excelnumberformat\\1.1.0\\excelnumberformat.1.1.0.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\harfbuzzsharp\\2.6.1.9\\harfbuzzsharp.2.6.1.9.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\mailkit\\4.14.1\\mailkit.4.14.1.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.2\\microsoft.aspnetcore.authentication.jwtbearer.10.0.2.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.2\\microsoft.aspnetcore.openapi.10.0.2.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\8.0.0\\microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
@@ -41,8 +49,14 @@
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.openapi\\2.4.1\\microsoft.openapi.2.4.1.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.sqlserver.server\\1.0.0\\microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.visualstudio.solutionpersistence\\1.0.52\\microsoft.visualstudio.solutionpersistence.1.0.52.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\mimekit\\4.14.0\\mimekit.4.14.0.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\questpdf\\2202.8.2\\questpdf.2202.8.2.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\rbush.signed\\4.0.0\\rbush.signed.4.0.0.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\sixlabors.fonts\\1.0.0\\sixlabors.fonts.1.0.0.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\skiasharp\\2.80.4\\skiasharp.2.80.4.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\skiasharp.harfbuzz\\2.80.4\\skiasharp.harfbuzz.2.80.4.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\swashbuckle.aspnetcore\\10.1.1\\swashbuckle.aspnetcore.10.1.1.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\10.1.1\\swashbuckle.aspnetcore.swagger.10.1.1.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\10.1.1\\swashbuckle.aspnetcore.swaggergen.10.1.1.nupkg.sha512",
@@ -57,9 +71,23 @@
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\system.composition.typedparts\\9.0.0\\system.composition.typedparts.9.0.0.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\system.configuration.configurationmanager\\9.0.4\\system.configuration.configurationmanager.9.0.4.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.0.1\\system.identitymodel.tokens.jwt.8.0.1.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\system.io.packaging\\8.0.1\\system.io.packaging.8.0.1.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\system.memory.data\\8.0.1\\system.memory.data.8.0.1.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\system.security.cryptography.pkcs\\9.0.4\\system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.4\\system.security.cryptography.protecteddata.9.0.4.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'SkiaSharp' 2.80.4 has a known high severity vulnerability, https://github.com/advisories/GHSA-j7hp-h8jx-5ppr",
+      "projectPath": "C:\\Users\\Miyakazi.Mafuduka\\OneDrive - barloworld-equipment.com\\Documents\\DemandManagementApp2\\DemandManagement2.Api\\DemandManagement2.Api.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\Miyakazi.Mafuduka\\OneDrive - barloworld-equipment.com\\Documents\\DemandManagementApp2\\DemandManagement2.Api\\DemandManagement2.Api.csproj",
+      "libraryId": "SkiaSharp",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }

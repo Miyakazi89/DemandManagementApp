@@ -60,6 +60,7 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("AnnualBenefit")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("AssessedAtUtc")
@@ -73,6 +74,11 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("CalculatedNPV")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CapExAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CostImpact")
@@ -82,9 +88,15 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("DiscountRate")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("InitialCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OpExAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProjectYears")
@@ -100,6 +112,7 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("WeightedScore")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -108,6 +121,47 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Assessments");
+                });
+
+            modelBuilder.Entity("DemandManagement2.Domain.Entities.BudgetEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ActualAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DemandRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PlannedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DemandRequestId");
+
+                    b.ToTable("BudgetEntries");
                 });
 
             modelBuilder.Entity("DemandManagement2.Domain.Entities.DecisionNote", b =>
@@ -391,6 +445,17 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                     b.Navigation("DemandRequest");
                 });
 
+            modelBuilder.Entity("DemandManagement2.Domain.Entities.BudgetEntry", b =>
+                {
+                    b.HasOne("DemandManagement2.Domain.Entities.DemandRequest", "DemandRequest")
+                        .WithMany("BudgetEntries")
+                        .HasForeignKey("DemandRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DemandRequest");
+                });
+
             modelBuilder.Entity("DemandManagement2.Domain.Entities.DecisionNote", b =>
                 {
                     b.HasOne("DemandManagement2.Domain.Entities.DemandRequest", "DemandRequest")
@@ -450,6 +515,8 @@ namespace DemandManagement2.Infrastructure.Data.Migrations
                     b.Navigation("Assessment");
 
                     b.Navigation("Attachments");
+
+                    b.Navigation("BudgetEntries");
 
                     b.Navigation("DecisionNotes");
 

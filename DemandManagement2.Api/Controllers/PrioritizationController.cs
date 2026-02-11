@@ -17,8 +17,19 @@ public class PrioritizationController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<DemandListItemDto>>> Get()
     {
-        var items = await _db.DemandRequests
+        var query = _db.DemandRequests
             .Include(d => d.Assessment)
+            .AsQueryable();
+
+        // Requesters only see their own demands
+        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (role == "Requester")
+        {
+            var userName = User.Identity?.Name ?? "";
+            query = query.Where(d => d.RequestedBy.ToLower() == userName.ToLower());
+        }
+
+        var items = await query
             .OrderByDescending(d => d.Assessment != null ? d.Assessment.WeightedScore : 0m)
             .ThenByDescending(d => d.Urgency)
             .ThenByDescending(d => d.CreatedAtUtc)

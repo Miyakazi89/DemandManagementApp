@@ -213,6 +213,60 @@ public class DemandApiClient
     }
 
     // -----------------------------
+    // Reports & Export
+    // -----------------------------
+    public async Task<List<ReportRow>> GetReport(ReportFilter filter)
+    {
+        await AttachTokenAsync();
+        var url = $"/api/reports?{filter.ToQueryString()}";
+        return await _http.GetFromJsonAsync<List<ReportRow>>(url, JsonOptions) ?? new();
+    }
+
+    public async Task<byte[]> ExportReportCsv(ReportFilter filter)
+    {
+        await AttachTokenAsync();
+        return await _http.GetByteArrayAsync($"/api/reports/export/csv?{filter.ToQueryString()}");
+    }
+
+    public async Task<byte[]> ExportReportExcel(ReportFilter filter)
+    {
+        await AttachTokenAsync();
+        return await _http.GetByteArrayAsync($"/api/reports/export/excel?{filter.ToQueryString()}");
+    }
+
+    public async Task<byte[]> ExportReportPdf(ReportFilter filter)
+    {
+        await AttachTokenAsync();
+        return await _http.GetByteArrayAsync($"/api/reports/export/pdf?{filter.ToQueryString()}");
+    }
+
+    // -----------------------------
+    // Budget & Finance
+    // -----------------------------
+    public async Task<BudgetSummary?> GetBudgetSummary(int? year = null)
+    {
+        await AttachTokenAsync();
+        var url = year.HasValue ? $"/api/budget/summary?year={year}" : "/api/budget/summary";
+        return await _http.GetFromJsonAsync<BudgetSummary>(url, JsonOptions);
+    }
+
+    public async Task<List<BudgetEntryItem>> GetBudgetEntries(Guid? demandId = null, int? year = null)
+    {
+        await AttachTokenAsync();
+        var parts = new List<string>();
+        if (demandId.HasValue) parts.Add($"demandId={demandId}");
+        if (year.HasValue) parts.Add($"year={year}");
+        var url = "/api/budget/entries" + (parts.Count > 0 ? "?" + string.Join("&", parts) : "");
+        return await _http.GetFromJsonAsync<List<BudgetEntryItem>>(url, JsonOptions) ?? new();
+    }
+
+    public async Task CreateBudgetEntry(CreateBudgetEntry entry)
+    {
+        await AttachTokenAsync();
+        (await _http.PostAsJsonAsync("/api/budget/entries", entry, JsonOptions)).EnsureSuccessStatusCode();
+    }
+
+    // -----------------------------
     // Decision Notes
     // -----------------------------
     public async Task<List<DecisionNoteItem>> GetDecisionNotes(Guid demandId)
@@ -265,7 +319,7 @@ public record DemandDetails(
     List<DemandAttachmentItem>? Attachments
 );
 
-// Matches API AssessmentDto (including NPV)
+// Matches API AssessmentDto (including NPV + CapEx/OpEx)
 public record AssessmentDetails(
     Guid Id,
     Guid DemandRequestId,
@@ -281,6 +335,9 @@ public record AssessmentDetails(
     int ProjectYears,
     decimal DiscountRate,
     decimal CalculatedNPV,
+
+    decimal CapExAmount,
+    decimal OpExAmount,
 
     string AssessedBy,
     DateTime AssessedAtUtc
@@ -350,6 +407,10 @@ public class CreateOrUpdateAssessment
     public decimal AnnualBenefit { get; set; } = 0m;
     public int ProjectYears { get; set; } = 3;
     public decimal DiscountRate { get; set; } = 10m;
+
+    // Budget breakdown
+    public decimal CapExAmount { get; set; } = 0m;
+    public decimal OpExAmount { get; set; } = 0m;
 
     public string AssessedBy { get; set; } = "";
 }
@@ -460,4 +521,72 @@ public class CreateDecisionNoteRequest
     public string Decision { get; set; } = "";
     public string ActionItems { get; set; } = "";
     public string RecordedBy { get; set; } = "";
+}
+
+// -----------------------------
+// Report Models
+// -----------------------------
+public class ReportFilter
+{
+    public string? Status { get; set; }
+    public string? Type { get; set; }
+    public string? BusinessUnit { get; set; }
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
+
+    public string ToQueryString()
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(Status)) parts.Add($"status={Uri.EscapeDataString(Status)}");
+        if (!string.IsNullOrEmpty(Type)) parts.Add($"type={Uri.EscapeDataString(Type)}");
+        if (!string.IsNullOrEmpty(BusinessUnit)) parts.Add($"businessUnit={Uri.EscapeDataString(BusinessUnit)}");
+        if (FromDate.HasValue) parts.Add($"fromDate={FromDate.Value:yyyy-MM-dd}");
+        if (ToDate.HasValue) parts.Add($"toDate={ToDate.Value:yyyy-MM-dd}");
+        return string.Join("&", parts);
+    }
+}
+
+public record ReportRow(
+    Guid Id, string Title, string Type, string Status,
+    string BusinessUnit, string RequestedBy, int Urgency,
+    int EstimatedEffort, decimal? WeightedScore,
+    decimal? InitialCost, decimal? AnnualBenefit, decimal? CalculatedNPV,
+    string? ApprovalStatus, DateTime CreatedAtUtc, DateTime? TargetDate
+);
+
+// -----------------------------
+// Budget Models
+// -----------------------------
+public record BudgetSummary(
+    decimal TotalPlanned, decimal TotalActual, decimal Variance,
+    decimal TotalCapEx, decimal TotalOpEx, decimal TotalNPV,
+    List<MonthlyBudget> MonthlyBreakdown,
+    List<DemandBudget> ByDemand
+);
+
+public record MonthlyBudget(int Month, int Year, string Label, decimal Planned, decimal Actual, decimal CumulativeBenefit);
+
+public record DemandBudget(
+    Guid DemandId, string Title, string Status,
+    decimal InitialCost, decimal AnnualBenefit, decimal CalculatedNPV,
+    decimal CapEx, decimal OpEx,
+    decimal PlannedTotal, decimal ActualTotal
+);
+
+public record BudgetEntryItem(
+    Guid Id, Guid DemandRequestId, string DemandTitle,
+    int Month, int Year,
+    decimal PlannedAmount, decimal ActualAmount,
+    string Category, string Notes, DateTime CreatedAtUtc
+);
+
+public class CreateBudgetEntry
+{
+    public Guid DemandRequestId { get; set; }
+    public int Month { get; set; }
+    public int Year { get; set; }
+    public decimal PlannedAmount { get; set; }
+    public decimal ActualAmount { get; set; }
+    public string Category { get; set; } = "CapEx";
+    public string Notes { get; set; } = "";
 }

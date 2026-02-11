@@ -1,4 +1,5 @@
 using DemandManagement2.Api.Dtos;
+using DemandManagement2.Api.Services;
 using DemandManagement2.Domain.Entities;
 using DemandManagement2.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +14,8 @@ namespace DemandManagement2.Api.Controllers;
 public class DemandsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public DemandsController(AppDbContext db) => _db = db;
+    private readonly IEmailService _email;
+    public DemandsController(AppDbContext db, IEmailService email) { _db = db; _email = email; }
 
     [HttpGet]
     public async Task<ActionResult<List<DemandListItemDto>>> GetAll(
@@ -29,7 +31,7 @@ public class DemandsController : ControllerBase
         if (role == "Requester")
         {
             var userName = User.Identity?.Name ?? "";
-            query = query.Where(d => d.RequestedBy == userName);
+            query = query.Where(d => d.RequestedBy.ToLower() == userName.ToLower());
         }
 
         if (status is not null) query = query.Where(d => d.Status == status);
@@ -116,6 +118,8 @@ public class DemandsController : ControllerBase
                 a.ProjectYears,
                 a.DiscountRate,
                 a.CalculatedNPV,
+                a.CapExAmount,
+                a.OpExAmount,
                 a.AssessedBy,
                 a.AssessedAtUtc
             ),
@@ -165,6 +169,14 @@ public class DemandsController : ControllerBase
         });
 
         await _db.SaveChangesAsync();
+
+        // Notify assessors/admins about new demand
+        var assessors = await _db.Users
+            .Where(u => u.Role == UserRole.Admin || u.Role == UserRole.Assessor)
+            .Select(u => u.Email)
+            .ToListAsync();
+        foreach (var email in assessors)
+            await _email.SendDemandNotificationAsync("Created", demand.Id, demand.Title, email);
 
         return CreatedAtAction(nameof(GetById), new { id = demand.Id }, new { demand.Id });
     }
@@ -235,6 +247,11 @@ public class DemandsController : ControllerBase
         });
 
         await _db.SaveChangesAsync();
+
+        // Notify requester about info request
+        var requester = await _db.Users.FirstOrDefaultAsync(u => u.FullName == demand.RequestedBy);
+        await _email.SendDemandNotificationAsync("InfoRequested", demand.Id, demand.Title, requester?.Email);
+
         return NoContent();
     }
 

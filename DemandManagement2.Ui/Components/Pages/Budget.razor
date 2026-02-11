@@ -1,0 +1,408 @@
+@page "/budget"
+@rendermode InteractiveServer
+@inject DemandManagement2.Ui.Services.DemandApiClient Api
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="dm-page">
+    <div class="dm-page__header">
+        <div>
+            <div class="dm-pill">Finance</div>
+            <h1 class="dm-title">Budget & Financial Forecasting</h1>
+            <p class="dm-subtitle">Track budget vs actual spending, benefit realization, and cost breakdowns.</p>
+        </div>
+        <div class="dm-actions">
+            <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
+            <a href="/reports" class="dm-btn dm-btn--ghost">Reports</a>
+            <select class="dm-select dm-year-select" @bind="_selectedYear" @bind:after="LoadData">
+                @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 2; y++)
+                {
+                    <option value="@y">@y</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (!_hasAccess)
+    {
+        <div class="dm-access-denied">
+            <div class="dm-access-denied__icon">&#128274;</div>
+            <div class="dm-access-denied__title">Access Restricted</div>
+            <div class="dm-access-denied__msg">Budget & Finance is available to <strong>Admin</strong> and <strong>Assessor</strong> roles only.</div>
+            <a href="/demands" class="dm-btn dm-btn--primary">Go to My Demands</a>
+        </div>
+    }
+    else if (_summary is null)
+    {
+        <div class="dm-loading">Loading budget data...</div>
+    }
+    else
+    {
+        <!-- KPI Cards -->
+        <div class="dm-grid dm-grid--4 dm-gap">
+            <div class="dm-kpi-card">
+                <div class="dm-kpi-label">Total Planned</div>
+                <div class="dm-kpi-value">@_summary.TotalPlanned.ToString("C0")</div>
+            </div>
+            <div class="dm-kpi-card">
+                <div class="dm-kpi-label">Total Actual</div>
+                <div class="dm-kpi-value">@_summary.TotalActual.ToString("C0")</div>
+            </div>
+            <div class="dm-kpi-card @(_summary.Variance >= 0 ? "dm-kpi-card--success" : "dm-kpi-card--danger")">
+                <div class="dm-kpi-label">Variance</div>
+                <div class="dm-kpi-value">@_summary.Variance.ToString("C0")</div>
+            </div>
+            <div class="dm-kpi-card dm-kpi-card--info">
+                <div class="dm-kpi-label">Total NPV</div>
+                <div class="dm-kpi-value">@_summary.TotalNPV.ToString("C0")</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="dm-grid dm-grid--2 dm-gap dm-mt">
+            <!-- Budget vs Actual Bar Chart -->
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div class="dm-card__title">Budget vs Actual (Monthly)</div>
+                </div>
+                @if (_summary.MonthlyBreakdown.Any())
+                {
+                    <ApexChart TItem="MonthlyBudget" Options="_barOptions" Height="320">
+                        <ApexPointSeries TItem="MonthlyBudget"
+                            Items="_summary.MonthlyBreakdown"
+                            SeriesType="SeriesType.Bar"
+                            Name="Planned"
+                            XValue="@(e => e.Label)"
+                            YValue="@(e => e.Planned)" />
+                        <ApexPointSeries TItem="MonthlyBudget"
+                            Items="_summary.MonthlyBreakdown"
+                            SeriesType="SeriesType.Bar"
+                            Name="Actual"
+                            XValue="@(e => e.Label)"
+                            YValue="@(e => e.Actual)" />
+                    </ApexChart>
+                }
+                else
+                {
+                    <div class="dm-empty">No monthly data yet.</div>
+                }
+            </div>
+
+            <!-- CapEx vs OpEx Donut -->
+            <div class="dm-card">
+                <div class="dm-card__header">
+                    <div class="dm-card__title">Cost Breakdown (CapEx vs OpEx)</div>
+                </div>
+                @if (_summary.TotalCapEx > 0 || _summary.TotalOpEx > 0)
+                {
+                    <ApexChart TItem="CostBreakdownItem" Options="_donutOptions" Height="320">
+                        <ApexPointSeries TItem="CostBreakdownItem"
+                            Items="_costBreakdown"
+                            SeriesType="SeriesType.Donut"
+                            Name="Amount"
+                            XValue="@(e => e.Label)"
+                            YAggregate="@(e => e.Sum(x => x.Amount))" />
+                    </ApexChart>
+                }
+                else
+                {
+                    <div class="dm-empty">No CapEx/OpEx data recorded.</div>
+                }
+            </div>
+        </div>
+
+        <!-- Benefit Realization Line Chart -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div class="dm-card__title">Cumulative Benefit Realization</div>
+            </div>
+            @if (_summary.MonthlyBreakdown.Any())
+            {
+                <ApexChart TItem="MonthlyBudget" Options="_lineOptions" Height="300">
+                    <ApexPointSeries TItem="MonthlyBudget"
+                        Items="_summary.MonthlyBreakdown"
+                        SeriesType="SeriesType.Line"
+                        Name="Cumulative Benefit"
+                        XValue="@(e => e.Label)"
+                        YValue="@(e => e.CumulativeBenefit)" />
+                </ApexChart>
+            }
+            else
+            {
+                <div class="dm-empty">No benefit data yet.</div>
+            }
+        </div>
+
+        <!-- Per-demand Budget Table -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Demand Financial Overview</div>
+                    <div class="dm-card__hint">Assessed demands with financial data</div>
+                </div>
+                <button class="dm-btn dm-btn--primary" @onclick="() => _showAddEntry = true">+ Add Budget Entry</button>
+            </div>
+            <div class="dm-table-wrap">
+                <table class="dm-table">
+                    <thead>
+                        <tr>
+                            <th>Demand</th>
+                            <th>Status</th>
+                            <th>Initial Cost</th>
+                            <th>Annual Benefit</th>
+                            <th>NPV</th>
+                            <th>CapEx</th>
+                            <th>OpEx</th>
+                            <th>Planned</th>
+                            <th>Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in _summary.ByDemand)
+                        {
+                            <tr>
+                                <td><a href="/demands/@d.DemandId" class="dm-link">@d.Title</a></td>
+                                <td><span class="dm-pillSmall dm-pillSmall--@d.Status.ToLower()">@d.Status</span></td>
+                                <td>@d.InitialCost.ToString("C0")</td>
+                                <td>@d.AnnualBenefit.ToString("C0")</td>
+                                <td class="@(d.CalculatedNPV >= 0 ? "dm-text-success" : "dm-text-danger")">@d.CalculatedNPV.ToString("C0")</td>
+                                <td>@d.CapEx.ToString("C0")</td>
+                                <td>@d.OpEx.ToString("C0")</td>
+                                <td>@d.PlannedTotal.ToString("C0")</td>
+                                <td>@d.ActualTotal.ToString("C0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!_summary.ByDemand.Any())
+            {
+                <div class="dm-empty">No assessed demands found.</div>
+            }
+        </div>
+
+        <!-- Add Budget Entry Modal -->
+        @if (_showAddEntry)
+        {
+            <div class="dm-modal-overlay" @onclick="() => _showAddEntry = false">
+                <div class="dm-modal" @onclick:stopPropagation="true">
+                    <div class="dm-modal__header">
+                        <h3>Add Budget Entry</h3>
+                        <button class="dm-modal__close" @onclick="() => _showAddEntry = false">&times;</button>
+                    </div>
+                    <div class="dm-form">
+                        <div class="dm-form-row">
+                            <label class="dm-label">Demand</label>
+                            <select class="dm-select" @bind="_newEntry.DemandRequestId">
+                                <option value="@Guid.Empty">Select demand...</option>
+                                @foreach (var d in _summary.ByDemand)
+                                {
+                                    <option value="@d.DemandId">@d.Title</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="dm-grid dm-grid--2 dm-gap">
+                            <div class="dm-form-row">
+                                <label class="dm-label">Month</label>
+                                <select class="dm-select" @bind="_newEntry.Month">
+                                    @for (int m = 1; m <= 12; m++)
+                                    {
+                                        <option value="@m">@(new DateTime(2024, m, 1).ToString("MMMM"))</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="dm-form-row">
+                                <label class="dm-label">Year</label>
+                                <input type="number" class="dm-input" @bind="_newEntry.Year" />
+                            </div>
+                        </div>
+                        <div class="dm-grid dm-grid--2 dm-gap">
+                            <div class="dm-form-row">
+                                <label class="dm-label">Planned Amount</label>
+                                <input type="number" step="0.01" class="dm-input" @bind="_newEntry.PlannedAmount" />
+                            </div>
+                            <div class="dm-form-row">
+                                <label class="dm-label">Actual Amount</label>
+                                <input type="number" step="0.01" class="dm-input" @bind="_newEntry.ActualAmount" />
+                            </div>
+                        </div>
+                        <div class="dm-form-row">
+                            <label class="dm-label">Category</label>
+                            <select class="dm-select" @bind="_newEntry.Category">
+                                <option value="CapEx">CapEx</option>
+                                <option value="OpEx">OpEx</option>
+                            </select>
+                        </div>
+                        <div class="dm-form-row">
+                            <label class="dm-label">Notes</label>
+                            <textarea class="dm-textarea" @bind="_newEntry.Notes" rows="2"></textarea>
+                        </div>
+                        <button class="dm-btn dm-btn--primary" @onclick="SaveEntry" disabled="@_saving">Save Entry</button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private bool _hasAccess;
+    private BudgetSummary? _summary;
+    private int _selectedYear = DateTime.UtcNow.Year;
+    private bool _showAddEntry;
+    private bool _saving;
+    private CreateBudgetEntry _newEntry = new();
+    private List<CostBreakdownItem> _costBreakdown = new();
+
+    private ApexChartOptions<MonthlyBudget> _barOptions = new()
+    {
+        Theme = new Theme { Mode = Mode.Dark },
+        Chart = new Chart { Background = "transparent" },
+        Colors = new List<string> { "#2563eb", "#22c55e" },
+        PlotOptions = new PlotOptions { Bar = new PlotOptionsBar { ColumnWidth = "60%" } }
+    };
+
+    private ApexChartOptions<CostBreakdownItem> _donutOptions = new()
+    {
+        Theme = new Theme { Mode = Mode.Dark },
+        Chart = new Chart { Background = "transparent" },
+        Colors = new List<string> { "#2563eb", "#f59e0b" },
+        Labels = new List<string> { "CapEx", "OpEx" }
+    };
+
+    private ApexChartOptions<MonthlyBudget> _lineOptions = new()
+    {
+        Theme = new Theme { Mode = Mode.Dark },
+        Chart = new Chart { Background = "transparent" },
+        Colors = new List<string> { "#06b6d4" },
+        Stroke = new Stroke { Curve = Curve.Smooth, Width = 3 }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var role = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        _hasAccess = role == "Admin" || role == "Assessor";
+
+        if (_hasAccess)
+            await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            _summary = await Api.GetBudgetSummary(_selectedYear);
+            if (_summary is not null)
+            {
+                _costBreakdown = new List<CostBreakdownItem>
+                {
+                    new("CapEx", _summary.TotalCapEx),
+                    new("OpEx", _summary.TotalOpEx)
+                };
+            }
+        }
+        catch { _summary = null; }
+
+        _newEntry = new CreateBudgetEntry { Month = DateTime.UtcNow.Month, Year = _selectedYear };
+    }
+
+    private async Task SaveEntry()
+    {
+        if (_newEntry.DemandRequestId == Guid.Empty) return;
+        _saving = true;
+        try
+        {
+            await Api.CreateBudgetEntry(_newEntry);
+            _showAddEntry = false;
+            await LoadData();
+        }
+        catch { }
+        _saving = false;
+    }
+
+    public record CostBreakdownItem(string Label, decimal Amount);
+}
+
+<style>
+    .dm-page { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
+    .dm-page__header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+    .dm-pill { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #06b6d4; background: rgba(6,182,212,.10); padding: 4px 14px; border-radius: 20px; margin-bottom: 8px; }
+    .dm-title { font-size: 28px; font-weight: 800; color: #f8fafc; margin: 0 0 4px; }
+    .dm-subtitle { font-size: 14px; color: rgba(255,255,255,.58); margin: 0; }
+    .dm-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .dm-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: .15s; text-decoration: none; }
+    .dm-btn--primary { background: #2563eb; color: #fff; }
+    .dm-btn--primary:hover { background: #1d4ed8; }
+    .dm-btn--ghost { background: rgba(255,255,255,.06); color: rgba(255,255,255,.82); border: 1px solid rgba(255,255,255,.10); }
+    .dm-btn--ghost:hover { background: rgba(255,255,255,.12); }
+    .dm-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .dm-mt { margin-top: 20px; }
+
+    .dm-year-select { width: 120px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: #f8fafc; padding: 9px 12px; font-size: 13px; }
+
+    .dm-grid { display: grid; gap: 16px; }
+    .dm-grid--2 { grid-template-columns: repeat(2, 1fr); }
+    .dm-grid--4 { grid-template-columns: repeat(4, 1fr); }
+    .dm-gap { gap: 16px; }
+
+    .dm-kpi-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 22px 24px; }
+    .dm-kpi-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.52); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    .dm-kpi-value { font-size: 28px; font-weight: 800; color: #f8fafc; }
+    .dm-kpi-card--success { border-color: rgba(34,197,94,.3); }
+    .dm-kpi-card--success .dm-kpi-value { color: #22c55e; }
+    .dm-kpi-card--danger { border-color: rgba(239,68,68,.3); }
+    .dm-kpi-card--danger .dm-kpi-value { color: #ef4444; }
+    .dm-kpi-card--info { border-color: rgba(6,182,212,.3); }
+    .dm-kpi-card--info .dm-kpi-value { color: #06b6d4; }
+
+    .dm-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 24px; }
+    .dm-card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .dm-card__title { font-size: 16px; font-weight: 700; color: #f8fafc; }
+    .dm-card__hint { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 2px; }
+
+    .dm-table-wrap { overflow-x: auto; }
+    .dm-table { width: 100%; border-collapse: collapse; }
+    .dm-table th { text-align: left; padding: 10px 14px; font-size: 11px; color: rgba(255,255,255,.52); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.10); font-weight: 600; }
+    .dm-table td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.06); color: rgba(255,255,255,.88); font-size: 13px; }
+    .dm-table tr:hover td { background: rgba(255,255,255,.03); }
+    .dm-link { color: #60a5fa; text-decoration: none; }
+    .dm-link:hover { text-decoration: underline; }
+    .dm-text-success { color: #22c55e; }
+    .dm-text-danger { color: #ef4444; }
+
+    .dm-pillSmall { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .dm-pillSmall--intake { background: rgba(6,182,212,.15); color: #06b6d4; }
+    .dm-pillSmall--underreview { background: rgba(37,99,235,.15); color: #60a5fa; }
+    .dm-pillSmall--approved { background: rgba(34,197,94,.15); color: #22c55e; }
+    .dm-pillSmall--rejected { background: rgba(239,68,68,.15); color: #ef4444; }
+    .dm-pillSmall--backlog { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .dm-pillSmall--prioritized { background: rgba(139,92,246,.15); color: #a78bfa; }
+
+    .dm-empty { text-align: center; padding: 40px; color: rgba(255,255,255,.4); font-size: 14px; }
+    .dm-loading { text-align: center; padding: 60px; color: rgba(255,255,255,.5); font-size: 15px; }
+
+    .dm-access-denied { text-align: center; padding: 80px 20px; }
+    .dm-access-denied__icon { font-size: 48px; margin-bottom: 16px; }
+    .dm-access-denied__title { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    .dm-access-denied__msg { font-size: 14px; color: rgba(255,255,255,.58); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+    .dm-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .dm-modal { background: #0f172a; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 28px; max-width: 550px; width: 90%; max-height: 85vh; overflow-y: auto; }
+    .dm-modal__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .dm-modal__header h3 { margin: 0; font-size: 18px; color: #f8fafc; }
+    .dm-modal__close { background: none; border: none; color: rgba(255,255,255,.5); font-size: 24px; cursor: pointer; }
+    .dm-form { display: flex; flex-direction: column; gap: 14px; }
+    .dm-form-row { display: flex; flex-direction: column; gap: 6px; }
+    .dm-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.58); text-transform: uppercase; letter-spacing: .5px; }
+    .dm-select, .dm-input, .dm-textarea { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: #f8fafc; padding: 9px 12px; font-size: 13px; width: 100%; }
+    .dm-textarea { resize: vertical; font-family: inherit; }
+
+    @@media (max-width: 900px) {
+        .dm-grid--4 { grid-template-columns: repeat(2, 1fr); }
+        .dm-grid--2 { grid-template-columns: 1fr; }
+        .dm-page__header { flex-direction: column; }
+    }
+    @@media (max-width: 600px) {
+        .dm-grid--4 { grid-template-columns: 1fr; }
+    }
+</style>

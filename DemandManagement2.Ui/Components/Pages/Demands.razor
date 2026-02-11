@@ -21,7 +21,10 @@
         </div>
         <div class="dm-actions">
             <a href="/dashboard" class="dm-btn dm-btn--ghost">Dashboard</a>
-            <a href="/prioritization" class="dm-btn dm-btn--ghost">Prioritization</a>
+            @if (_userRole != "Requester")
+            {
+                <a href="/prioritization" class="dm-btn dm-btn--ghost">Prioritization</a>
+            }
             <a href="/demands/new" class="dm-btn dm-btn--primary">+ New Request</a>
         </div>
     </div>

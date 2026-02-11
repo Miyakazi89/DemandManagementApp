@@ -8,10 +8,19 @@
     ".NETCoreApp,Version=v10.0": {
       "DemandManagement2.Ui/1.0.0": {
         "dependencies": {
+          "Blazor-ApexCharts": "6.1.0",
           "System.IdentityModel.Tokens.Jwt": "8.15.0"
         },
         "runtime": {
           "DemandManagement2.Ui.dll": {}
+        }
+      },
+      "Blazor-ApexCharts/6.1.0": {
+        "runtime": {
+          "lib/net10.0/Blazor-ApexCharts.dll": {
+            "assemblyVersion": "6.1.0.0",
+            "fileVersion": "6.1.0.0"
+          }
         }
       },
       "Microsoft.IdentityModel.Abstractions/8.15.0": {
@@ -74,6 +83,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "Blazor-ApexCharts/6.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-H2mkr7HEVk+BoQKcyoQtqq3ifoo/VxS7I8B35wO9tpiarGMdnAsL9pwcQBU4E/YnADNF+zOKTIaRxhd93Qr9HA==",
+      "path": "blazor-apexcharts/6.1.0",
+      "hashPath": "blazor-apexcharts.6.1.0.nupkg.sha512"
     },
     "Microsoft.IdentityModel.Abstractions/8.15.0": {
       "type": "package",

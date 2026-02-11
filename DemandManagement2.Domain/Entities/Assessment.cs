@@ -23,6 +23,10 @@ public class Assessment
     public decimal DiscountRate { get; set; }      // stored as percent (e.g. 10 means 10%)
     public decimal CalculatedNPV { get; set; }
 
+    // Budget breakdown
+    public decimal CapExAmount { get; set; }
+    public decimal OpExAmount { get; set; }
+
     public string AssessedBy { get; set; } = string.Empty;
     public DateTime AssessedAtUtc { get; set; } = DateTime.UtcNow;
 }

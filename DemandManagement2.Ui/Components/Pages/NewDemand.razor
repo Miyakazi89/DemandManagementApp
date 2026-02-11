@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="dm-page">
     <div class="dm-page__header">
@@ -53,7 +54,7 @@
 
                 <div class="dm-form-row">
                     <label for="requestedBy">Requested By</label>
-                    <input id="requestedBy" class="dm-input" @bind="_model.RequestedBy" placeholder="Your name" />
+                    <input id="requestedBy" class="dm-input" @bind="_model.RequestedBy" readonly />
                 </div>
 
                 <div class="dm-form-row">
@@ -110,6 +111,13 @@
     private DateTime? _targetDate;
     private List<IBrowserFile> _selectedFiles = new();
     private bool _submitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var fullName = authState.User.Identity?.Name ?? "";
+        _model.RequestedBy = fullName;
+    }
 
     private void OnFilesSelected(InputFileChangeEventArgs e)
     {

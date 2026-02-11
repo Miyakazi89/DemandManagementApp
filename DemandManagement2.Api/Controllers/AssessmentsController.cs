@@ -14,7 +14,8 @@ namespace DemandManagement2.Api.Controllers;
 public class AssessmentsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public AssessmentsController(AppDbContext db) => _db = db;
+    private readonly IEmailService _email;
+    public AssessmentsController(AppDbContext db, IEmailService email) { _db = db; _email = email; }
 
     [HttpGet]
     public async Task<ActionResult<AssessmentDto>> Get(Guid demandId)
@@ -49,6 +50,10 @@ public class AssessmentsController : ControllerBase
         a.ProjectYears = dto.ProjectYears;
         a.DiscountRate = dto.DiscountRate;
 
+        // Budget breakdown
+        a.CapExAmount = dto.CapExAmount;
+        a.OpExAmount = dto.OpExAmount;
+
         // calculated NPV
         a.CalculatedNPV = CalculateNpv(dto.InitialCost, dto.AnnualBenefit, dto.ProjectYears, dto.DiscountRate);
 
@@ -77,6 +82,11 @@ public class AssessmentsController : ControllerBase
         });
 
         await _db.SaveChangesAsync();
+
+        // Notify requester about assessment
+        var requester = await _db.Users.FirstOrDefaultAsync(u => u.FullName == demand.RequestedBy);
+        await _email.SendDemandNotificationAsync("Assessed", demand.Id, demand.Title, requester?.Email);
+
         return NoContent();
     }
 
@@ -94,6 +104,8 @@ public class AssessmentsController : ControllerBase
         a.ProjectYears,
         a.DiscountRate,
         a.CalculatedNPV,
+        a.CapExAmount,
+        a.OpExAmount,
         a.AssessedBy,
         a.AssessedAtUtc
     );
