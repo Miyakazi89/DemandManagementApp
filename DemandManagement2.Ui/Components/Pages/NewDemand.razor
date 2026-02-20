@@ -1,4 +1,4 @@
-@page "/demands/new"
+﻿@page "/demands/new"
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 @inject NavigationManager Nav
@@ -172,12 +172,12 @@
 
 <style>
 :root{
-  --dm-border: rgba(255,255,255,.10);
+  --dm-border: rgba(255,205,17,.18);
   --dm-text: rgba(255,255,255,.92);
   --dm-muted: rgba(255,255,255,.68);
-  --dm-faint: rgba(255,255,255,.52);
-  --dm-primary: #2563eb;
-  --dm-primary-2: #1d4ed8;
+  --dm-faint: rgba(255,255,255,.48);
+  --dm-primary: #ffcd11;
+  --dm-primary-2: #e6b000;
   --dm-success: #22c55e;
 }
 
@@ -253,7 +253,7 @@
 .dm-btn--primary{
   background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
   color: white;
-  border-color: rgba(37,99,235,.55);
+  border-color: rgba(255,205,17,.55);
 }
 .dm-btn--primary:hover{ transform: translateY(-1px); }
 .dm-btn--ghost{

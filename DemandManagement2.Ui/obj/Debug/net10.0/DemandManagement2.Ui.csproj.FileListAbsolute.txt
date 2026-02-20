@@ -68,8 +68,6 @@ C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandM
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\mbt2d0eua9-{0}-63fj8s7r0e-63fj8s7r0e.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\d8o6l4xncc-{0}-0j3bgjxly4-0j3bgjxly4.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\fn9feyh5uz-{0}-abdmv1u4y3-abdmv1u4y3.gz
-C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\kea23n66jf-{0}-2i0r6wwb69-2i0r6wwb69.gz
-C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\ey3a23ljio-{0}-iz83ucvm53-iz83ucvm53.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\z9j8i5crxu-{0}-gk79lf1zjo-gk79lf1zjo.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\zed5x0wjv0-{0}-gk79lf1zjo-gk79lf1zjo.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\staticwebassets.build.json
@@ -82,7 +80,6 @@ C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandM
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\DemandManagement2.Ui.pdb
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\DemandManagement2.Ui.genruntimeconfig.cache
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\ref\DemandManagement2.Ui.dll
-C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\p3m3pz57g7-{0}-khy4lop6wu-khy4lop6wu.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\DemandManagement2.Ui.sourcelink.json
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
@@ -139,3 +136,6 @@ C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandM
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\dko6y7plta-{0}-j4a4u2uj29-j4a4u2uj29.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\1j8oabzfj7-{0}-qz6clc5837-qz6clc5837.gz
 C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\0g0tdqq8mx-{0}-ody88ncx6z-ody88ncx6z.gz
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\kea23n66jf-{0}-ax6tuj8tun-ax6tuj8tun.gz
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\ey3a23ljio-{0}-zr4b1gdhaw-zr4b1gdhaw.gz
+C:\Users\Miyakazi.Mafuduka\OneDrive - barloworld-equipment.com\Documents\DemandManagementApp2\DemandManagement2.Ui\obj\Debug\net10.0\compressed\p3m3pz57g7-{0}-l9g6g277zq-l9g6g277zq.gz

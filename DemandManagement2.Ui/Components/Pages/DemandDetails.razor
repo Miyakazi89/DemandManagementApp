@@ -1,4 +1,4 @@
-@page "/demands/{Id:guid}"
+﻿@page "/demands/{Id:guid}"
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 @inject NavigationManager Nav
@@ -149,7 +149,7 @@
                     }
                     else
                     {
-                        <div class="dm-card__hint" style="color:#93c5fd; margin-bottom:10px;">
+                        <div class="dm-card__hint" style="color:#ffcd11; margin-bottom:10px;">
                             You can edit your request while it is still in Intake.
                         </div>
                     }
@@ -725,15 +725,15 @@
 
 <style>
 :root{
-  --dm-border: rgba(255,255,255,.10);
+  --dm-border: rgba(255,205,17,.18);
   --dm-text: rgba(255,255,255,.92);
   --dm-muted: rgba(255,255,255,.68);
-  --dm-faint: rgba(255,255,255,.52);
-  --dm-primary: #2563eb;
-  --dm-primary-2: #1d4ed8;
+  --dm-faint: rgba(255,255,255,.48);
+  --dm-primary: #ffcd11;
+  --dm-primary-2: #e6b000;
   --dm-success: #22c55e;
   --dm-success-2: #16a34a;
-  --dm-info: #06b6d4;
+  --dm-info: #ffcd11;
 }
 
 .dm-page{ max-width: 1100px; }
@@ -782,7 +782,7 @@
   font-weight: 800;
   border: 1px solid var(--dm-border);
 }
-.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+.dm-badge--info{ background: rgba(255,205,17,.12); color: #a5f3fc; }
 .dm-badge--ghost{ background: rgba(255,255,255,.04); color: var(--dm-muted); }
 
 .dm-pillSmall{
@@ -795,9 +795,9 @@
   color: var(--dm-text);
 }
 .dm-pillSmall--status{
-  background: rgba(37,99,235,.15);
-  border-color: rgba(37,99,235,.3);
-  color: #93c5fd;
+  background: rgba(255,205,17,.15);
+  border-color: rgba(255,205,17,.3);
+  color: #ffcd11;
 }
 .dm-pillSmall--score{
   background: rgba(34,197,94,.12);
@@ -867,7 +867,7 @@
 .dm-btn--primary{
   background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
   color: white;
-  border-color: rgba(37,99,235,.55);
+  border-color: rgba(255,205,17,.55);
 }
 .dm-btn--primary:hover{ transform: translateY(-1px); }
 .dm-btn--success{
@@ -1004,7 +1004,7 @@
   z-index: 1000;
 }
 .dm-modal{
-  background: #1a1a2e;
+  background: #181818;
   border: 1px solid var(--dm-border);
   border-radius: 16px;
   padding: 20px;
@@ -1121,7 +1121,7 @@
   left: -27px;
 }
 .dm-dot--blue{ background: #3b82f6; }
-.dm-dot--cyan{ background: #06b6d4; }
+.dm-dot--cyan{ background: #ffcd11; }
 .dm-dot--green{ background: #22c55e; }
 .dm-dot--red{ background: #ef4444; }
 .dm-dot--yellow{ background: #f59e0b; }

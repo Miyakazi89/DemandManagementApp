@@ -1,4 +1,4 @@
-@page "/dashboard"
+﻿@page "/dashboard"
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 @inject AuthenticationStateProvider AuthStateProvider
@@ -271,13 +271,13 @@
 <style>
 /* ===== Dashboard styling (self-contained) ===== */
 :root{
-  --dm-border: rgba(255,255,255,.10);
+  --dm-border: rgba(255,205,17,.18);
   --dm-text: rgba(255,255,255,.92);
   --dm-muted: rgba(255,255,255,.68);
-  --dm-faint: rgba(255,255,255,.52);
-  --dm-primary: #2563eb;
-  --dm-primary-2: #1d4ed8;
-  --dm-info: #06b6d4;
+  --dm-faint: rgba(255,255,255,.48);
+  --dm-primary: #ffcd11;
+  --dm-primary-2: #e6b000;
+  --dm-info: #ffcd11;
   --dm-shadow: 0 20px 60px rgba(0,0,0,.35);
 }
 
@@ -328,7 +328,7 @@
   font-weight: 800;
   border: 1px solid var(--dm-border);
 }
-.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+.dm-badge--info{ background: rgba(255,205,17,.12); color: #a5f3fc; }
 .dm-badge--ghost{ background: rgba(255,255,255,.04); color: var(--dm-muted); }
 
 /* cards */
@@ -376,7 +376,7 @@
   width: 10px; height: 10px; border-radius: 999px;
   background: rgba(255,255,255,.25);
 }
-.dm-dot--blue{ background: rgba(37,99,235,.8); }
+.dm-dot--blue{ background: rgba(255,205,17,.8); }
 .dm-dot--green{ background: rgba(34,197,94,.8); }
 
 .dm-list__titleText{ font-weight: 850; }
@@ -432,13 +432,13 @@
   color: #bbf7d0;
 }
 .dm-pillSmall--status{
-  background: rgba(37,99,235,.15);
-  border-color: rgba(37,99,235,.3);
-  color: #93c5fd;
+  background: rgba(255,205,17,.15);
+  border-color: rgba(255,205,17,.3);
+  color: #ffcd11;
 }
 
 .dm-linkInline{
-  color: #93c5fd;
+  color: #ffcd11;
   text-decoration: none;
   font-weight: 800;
 }
@@ -457,7 +457,7 @@
 .dm-btn--primary{
   background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
   color: white;
-  border-color: rgba(37,99,235,.55);
+  border-color: rgba(255,205,17,.55);
 }
 .dm-btn--primary:hover{ transform: translateY(-1px); }
 .dm-btn--ghost{

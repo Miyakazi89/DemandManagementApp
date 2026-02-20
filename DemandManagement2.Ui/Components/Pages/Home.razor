@@ -161,23 +161,21 @@
 
 <style>
 :root{
-  --dm-bg: #0b1220;
-  --dm-surface: #0f172a;
-  --dm-border: rgba(255,255,255,.10);
+  --dm-bg: #0d0d0d;
+  --dm-surface: #181818;
+  --dm-border: rgba(255,205,17,.18);
   --dm-text: rgba(255,255,255,.92);
   --dm-muted: rgba(255,255,255,.68);
-  --dm-faint: rgba(255,255,255,.52);
-  --dm-primary: #2563eb;
-  --dm-primary-2: #1d4ed8;
-  --dm-info: #06b6d4;
+  --dm-faint: rgba(255,255,255,.48);
+  --dm-primary: #ffcd11;
+  --dm-primary-2: #e6b000;
+  --dm-info: #ffcd11;
   --dm-shadow: 0 20px 60px rgba(0,0,0,.35);
 }
 
 /* Page background (safe: won't break layout) */
 body{
-  background: radial-gradient(1200px 800px at 10% 0%, rgba(37,99,235,.18), transparent 60%),
-              radial-gradient(900px 600px at 90% 10%, rgba(6,182,212,.12), transparent 55%),
-              #070b14;
+  background: #000;
 }
 
 /* HERO */
@@ -188,10 +186,7 @@ body{
   margin: 18px 0 28px;
   padding: 26px;
   border-radius: 18px;
-  background:
-    radial-gradient(1200px 500px at 20% 0%, rgba(37, 99, 235, .35), transparent 60%),
-    radial-gradient(900px 450px at 90% 25%, rgba(6, 182, 212, .25), transparent 55%),
-    linear-gradient(180deg, rgba(15, 23, 42, .95), rgba(2, 6, 23, .95));
+  background: linear-gradient(180deg, rgba(20,20,20,.98), rgba(0,0,0,.98));
   border: 1px solid var(--dm-border);
   box-shadow: var(--dm-shadow);
 }
@@ -324,7 +319,7 @@ body{
   font-weight: 700;
   border: 1px solid var(--dm-border);
 }
-.dm-badge--info{ background: rgba(6, 182, 212, .16); color: #a5f3fc; }
+.dm-badge--info{ background: rgba(255,205,17,.12); color: #a5f3fc; }
 
 /* BUTTONS */
 .dm-btn{
@@ -338,7 +333,7 @@ body{
 .dm-btn--primary{
   background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
   color: white;
-  border-color: rgba(37,99,235,.55);
+  border-color: rgba(255,205,17,.55);
 }
 .dm-btn--primary:hover{ transform: translateY(-1px); }
 .dm-btn--ghost{
@@ -349,7 +344,7 @@ body{
 .dm-btn--link{
   background: transparent;
   border: none;
-  color: #93c5fd;
+  color: #ffcd11;
   padding: 0;
 }
 .dm-btn--link:hover{ text-decoration: underline; }

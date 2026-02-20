@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "EHOPP/pOlfM=",
+  "dgSpecHash": "ruIJgDdGUkI=",
   "success": true,
   "projectFilePath": "C:\\Users\\Miyakazi.Mafuduka\\OneDrive - barloworld-equipment.com\\Documents\\DemandManagementApp2\\DemandManagement2.Ui\\DemandManagement2.Ui.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\blazor-apexcharts\\6.1.0\\blazor-apexcharts.6.1.0.nupkg.sha512",
-    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.2\\microsoft.aspnetcore.app.internal.assets.10.0.2.nupkg.sha512",
+    "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.3\\microsoft.aspnetcore.app.internal.assets.10.0.3.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.identitymodel.abstractions\\8.15.0\\microsoft.identitymodel.abstractions.8.15.0.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.identitymodel.jsonwebtokens\\8.15.0\\microsoft.identitymodel.jsonwebtokens.8.15.0.nupkg.sha512",
     "C:\\Users\\Miyakazi.Mafuduka\\.nuget\\packages\\microsoft.identitymodel.logging\\8.15.0\\microsoft.identitymodel.logging.8.15.0.nupkg.sha512",

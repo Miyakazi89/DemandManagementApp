@@ -17,7 +17,13 @@ namespace DemandManagement2.Api.Controllers;
 public class ReportsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public ReportsController(AppDbContext db) => _db = db;
+    private readonly IWebHostEnvironment _env;
+
+    public ReportsController(AppDbContext db, IWebHostEnvironment env)
+    {
+        _db = db;
+        _env = env;
+    }
 
     [HttpGet]
     public async Task<ActionResult<List<ReportRowDto>>> Get([FromQuery] ReportFilterDto filter)
@@ -63,8 +69,8 @@ public class ReportsController : ControllerBase
         {
             ws.Cell(1, i + 1).Value = headers[i];
             ws.Cell(1, i + 1).Style.Font.Bold = true;
-            ws.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.DarkBlue;
-            ws.Cell(1, i + 1).Style.Font.FontColor = XLColor.White;
+            ws.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1A1A1A");
+            ws.Cell(1, i + 1).Style.Font.FontColor = XLColor.FromHtml("#FFCD11");
         }
 
         for (int row = 0; row < rows.Count; row++)
@@ -100,6 +106,11 @@ public class ReportsController : ControllerBase
     {
         var rows = await BuildQuery(filter).ToListAsync();
 
+        var logoPath = Path.Combine(_env.ContentRootPath, "Assets", "barloworld-logo.png");
+        byte[]? logoBytes = System.IO.File.Exists(logoPath)
+            ? System.IO.File.ReadAllBytes(logoPath)
+            : null;
+
         var document = Document.Create(container =>
         {
             container.Page(page =>
@@ -108,8 +119,22 @@ public class ReportsController : ControllerBase
                 page.Margin(1, Unit.Centimetre);
                 page.DefaultTextStyle(x => x.FontSize(9));
 
-                page.Header().PaddingBottom(10).Text("Demand Management Report")
-                    .Bold().FontSize(18).FontColor(Colors.Blue.Darken2);
+                page.Header().PaddingBottom(8).BorderBottom(2).BorderColor("#FFCD11").Row(row =>
+                {
+                    if (logoBytes != null)
+                    {
+                        row.ConstantItem(160).Image(logoBytes);
+                        row.ConstantItem(16); // spacer
+                    }
+
+                    row.RelativeItem().AlignMiddle().Column(col =>
+                    {
+                        col.Item().Text("Demand Management Report")
+                            .Bold().FontSize(18).FontColor("#1A1A1A");
+                        col.Item().Text($"Generated: {DateTime.UtcNow:dd MMM yyyy HH:mm} UTC")
+                            .FontSize(8).FontColor("#555555");
+                    });
+                });
 
                 page.Content().Table(table =>
                 {
@@ -132,13 +157,13 @@ public class ReportsController : ControllerBase
 
                     foreach (var h in headerCols)
                     {
-                        table.Cell().Background(Colors.Blue.Darken2).Padding(4)
-                            .Text(h).FontColor(Colors.White).Bold();
+                        table.Cell().Background("#1A1A1A").Padding(4)
+                            .Text(h).FontColor("#FFCD11").Bold();
                     }
 
                     foreach (var r in rows)
                     {
-                        var bg = rows.IndexOf(r) % 2 == 0 ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = rows.IndexOf(r) % 2 == 0 ? "#F5F5F5" : Colors.White;
                         table.Cell().Background(bg).Padding(4).Text(r.Title);
                         table.Cell().Background(bg).Padding(4).Text(r.Type);
                         table.Cell().Background(bg).Padding(4).Text(r.Status);
@@ -152,12 +177,17 @@ public class ReportsController : ControllerBase
                     }
                 });
 
-                page.Footer().AlignCenter().Text(x =>
+                page.Footer().PaddingTop(6).BorderTop(2).BorderColor("#FFCD11").Row(row =>
                 {
-                    x.Span("Page ");
-                    x.CurrentPageNumber();
-                    x.Span(" of ");
-                    x.TotalPages();
+                    row.RelativeItem().Text("Barloworld Equipment | Confidential")
+                        .FontSize(8).FontColor("#1A1A1A");
+                    row.RelativeItem().AlignRight().Text(x =>
+                    {
+                        x.Span("Page ").FontSize(8).FontColor("#1A1A1A");
+                        x.CurrentPageNumber().FontSize(8).FontColor("#1A1A1A");
+                        x.Span(" of ").FontSize(8).FontColor("#1A1A1A");
+                        x.TotalPages().FontSize(8).FontColor("#1A1A1A");
+                    });
                 });
             });
         });

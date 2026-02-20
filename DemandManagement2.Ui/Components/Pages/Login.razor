@@ -9,7 +9,7 @@
 <div class="dm-auth">
     <div class="dm-auth__card">
         <div class="dm-auth__header">
-            <div class="dm-brand__mark">DM</div>
+            <img src="barloworld-logo.png" alt="Barloworld Equipment" class="dm-auth__logo" />
             <h2 class="dm-auth__title">Sign In</h2>
             <p class="dm-auth__hint">Enter your credentials to access Demand Management</p>
         </div>
@@ -63,12 +63,12 @@
 
 <style>
 :root{
-  --dm-border: rgba(255,255,255,.10);
+  --dm-border: rgba(255,205,17,.18);
   --dm-text: rgba(255,255,255,.92);
   --dm-muted: rgba(255,255,255,.68);
-  --dm-faint: rgba(255,255,255,.52);
-  --dm-primary: #2563eb;
-  --dm-primary-2: #1d4ed8;
+  --dm-faint: rgba(255,255,255,.48);
+  --dm-primary: #ffcd11;
+  --dm-primary-2: #e6b000;
 }
 
 .dm-auth{
@@ -77,7 +77,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background: radial-gradient(800px 600px at 50% 20%, rgba(37,99,235,.15), transparent 60%), #070b14;
+  background: #000;
 }
 
 .dm-auth__card{
@@ -87,22 +87,19 @@
   border: 1px solid var(--dm-border);
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
 }
 
 .dm-auth__header{ text-align: center; margin-bottom: 24px; }
-.dm-brand__mark{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--dm-primary), var(--dm-primary-2));
-  color: white;
-  font-weight: 950;
-  font-size: 18px;
-  margin-bottom: 14px;
+.dm-auth__logo{
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 .dm-auth__title{ color: var(--dm-text); margin: 0 0 6px; font-size: 24px; }
 .dm-auth__hint{ color: var(--dm-muted); font-size: 14px; margin: 0; }
@@ -131,7 +128,7 @@
   box-sizing: border-box;
 }
 .dm-input::placeholder{ color: var(--dm-faint); }
-.dm-input:focus{ border-color: rgba(37,99,235,.5); }
+.dm-input:focus{ border-color: rgba(255,205,17,.55); }
 
 .dm-btn{
   border: 1px solid var(--dm-border);
@@ -143,8 +140,8 @@
 }
 .dm-btn--primary{
   background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-2));
-  color: white;
-  border-color: rgba(37,99,235,.55);
+  color: #111;
+  border-color: rgba(255,205,17,.55);
 }
 .dm-btn--primary:hover{ transform: translateY(-1px); }
 .dm-btn--primary:disabled{ opacity: .6; cursor: not-allowed; transform: none; }
@@ -156,6 +153,6 @@
   color: var(--dm-muted);
   font-size: 14px;
 }
-.dm-auth__link{ color: #93c5fd; text-decoration: none; font-weight: 700; }
+.dm-auth__link{ color: #ffcd11; text-decoration: none; font-weight: 700; }
 .dm-auth__link:hover{ text-decoration: underline; }
 </style>
