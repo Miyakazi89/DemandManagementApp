@@ -2,6 +2,8 @@
 @rendermode InteractiveServer
 @inject DemandManagement2.Ui.Services.DemandApiClient Api
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+@implements IDisposable
 
 <div class="dm-page">
     <div class="dm-page__header">
@@ -152,6 +154,93 @@
                 </div>
             }
         </div>
+
+        <!-- Project Resources -->
+        <div class="dm-card dm-mt">
+            <div class="dm-card__header">
+                <div>
+                    <div class="dm-card__title">Project Resources</div>
+                    <div class="dm-card__hint">Financial, physical, information &amp; governance resources required by demands &mdash; <span class="dm-pr-drag-hint">drag cards to reorder</span></div>
+                </div>
+                <div class="dm-pr-toolbar">
+                    <div class="dm-pr-tabs">
+                        <button class="dm-pr-tab @(_prFilterType == "" ? "dm-pr-tab--active" : "")" @onclick='() => _prFilterType = ""'>All</button>
+                        <button class="dm-pr-tab dm-pr-tab--fin @(_prFilterType == "Financial" ? "dm-pr-tab--active" : "")" @onclick='() => _prFilterType = "Financial"'>Financial</button>
+                        <button class="dm-pr-tab dm-pr-tab--phys @(_prFilterType == "Physical" ? "dm-pr-tab--active" : "")" @onclick='() => _prFilterType = "Physical"'>Physical</button>
+                        <button class="dm-pr-tab dm-pr-tab--info @(_prFilterType == "InformationKnowledge" ? "dm-pr-tab--active" : "")" @onclick='() => _prFilterType = "InformationKnowledge"'>Info &amp; Knowledge</button>
+                        <button class="dm-pr-tab dm-pr-tab--gov @(_prFilterType == "GovernanceSupport" ? "dm-pr-tab--active" : "")" @onclick='() => _prFilterType = "GovernanceSupport"'>Governance</button>
+                    </div>
+                    <button class="dm-btn dm-btn--ghost" @onclick="OpenPrModal">+ Add Resource</button>
+                </div>
+            </div>
+
+            @{
+                var prFiltered = GetFilteredPr();
+                var prTotalCost = prFiltered.Where(r => r.EstimatedCost.HasValue).Sum(r => r.EstimatedCost!.Value);
+            }
+
+            @if (_projectResources?.Count > 0)
+            {
+                <div class="dm-pr-kpis">
+                    <div class="dm-pr-kpi">
+                        <span class="dm-pr-kpi__label">Total Items</span>
+                        <span class="dm-pr-kpi__value">@prFiltered.Count</span>
+                    </div>
+                    <div class="dm-pr-kpi dm-pr-kpi--fin">
+                        <span class="dm-pr-kpi__label">Financial</span>
+                        <span class="dm-pr-kpi__value">@prFiltered.Count(r => r.ResourceType == "Financial")</span>
+                    </div>
+                    <div class="dm-pr-kpi dm-pr-kpi--phys">
+                        <span class="dm-pr-kpi__label">Physical</span>
+                        <span class="dm-pr-kpi__value">@prFiltered.Count(r => r.ResourceType == "Physical")</span>
+                    </div>
+                    <div class="dm-pr-kpi dm-pr-kpi--info">
+                        <span class="dm-pr-kpi__label">Info &amp; Knowledge</span>
+                        <span class="dm-pr-kpi__value">@prFiltered.Count(r => r.ResourceType == "InformationKnowledge")</span>
+                    </div>
+                    <div class="dm-pr-kpi dm-pr-kpi--gov">
+                        <span class="dm-pr-kpi__label">Governance</span>
+                        <span class="dm-pr-kpi__value">@prFiltered.Count(r => r.ResourceType == "GovernanceSupport")</span>
+                    </div>
+                    @if (prTotalCost > 0)
+                    {
+                        <div class="dm-pr-kpi dm-pr-kpi--cost">
+                            <span class="dm-pr-kpi__label">Est. Total Cost</span>
+                            <span class="dm-pr-kpi__value">@prTotalCost.ToString("N0")</span>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (prFiltered.Count == 0)
+            {
+                <div class="dm-empty">No project resources yet. Click <strong>+ Add Resource</strong> to add one.</div>
+            }
+            else
+            {
+                @if (string.IsNullOrEmpty(_prFilterType))
+                {
+                    @foreach (var grp in prFiltered.GroupBy(r => r.ResourceType).OrderBy(g => PrTypeOrder(g.Key)))
+                    {
+                        <div class="dm-pr-group">
+                            <div class="dm-pr-group__header">
+                                <span class="dm-pr-badge dm-pr-badge--@PrTypeCss(grp.Key)">@PrTypeLabel(grp.Key)</span>
+                                <span class="dm-pr-group__count">@grp.Count() item@(grp.Count() != 1 ? "s" : "")</span>
+                            </div>
+                            <div class="dm-pr-cards">
+                                @foreach (var r in grp) { @PrCard(r) }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="dm-pr-cards">
+                        @foreach (var r in prFiltered) { @PrCard(r) }
+                    </div>
+                }
+            }
+        </div>
     }
 
     <!-- Add Resource Modal -->
@@ -245,6 +334,137 @@
             </div>
         </div>
     }
+
+    <!-- Add Project Resource Modal -->
+    @if (_showAddPr)
+    {
+        <div class="dm-modal-overlay" @onclick="() => _showAddPr = false">
+            <div class="dm-modal dm-modal--wide" @onclick:stopPropagation="true">
+                <div class="dm-modal__header">
+                    <div class="dm-modal__title">Add Project Resource</div>
+                    <button class="dm-modal__close" @onclick="() => _showAddPr = false">&times;</button>
+                </div>
+                <div class="dm-form">
+                    <div class="dm-form-row">
+                        <label>Demand *</label>
+                        <select class="dm-input dm-select" @bind="_newPr.DemandRequestId">
+                            <option value="@Guid.Empty">-- Select Demand --</option>
+                            @if (_demands is not null)
+                            {
+                                @foreach (var d in _demands)
+                                {
+                                    <option value="@d.Id">@d.Title</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Resource Type *</label>
+                        <select class="dm-input dm-select" @bind="_newPr.ResourceType">
+                            <option value="Financial">Financial – Budget &amp; costs</option>
+                            <option value="Physical">Physical – Equipment &amp; items</option>
+                            <option value="InformationKnowledge">Information &amp; Knowledge – Docs &amp; data</option>
+                            <option value="GovernanceSupport">Governance &amp; Support – Frameworks &amp; processes</option>
+                        </select>
+                    </div>
+                    <div class="dm-pr-hint">@PrTypeHint(_newPr.ResourceType)</div>
+                    <div class="dm-form-row">
+                        <label>Name *</label>
+                        <input class="dm-input" @bind="_newPr.Name" placeholder="@PrNamePlaceholder(_newPr.ResourceType)" />
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Description</label>
+                        <textarea class="dm-input dm-textarea" @bind="_newPr.Description" placeholder="Describe this resource requirement..."></textarea>
+                    </div>
+                    @if (_newPr.ResourceType == "Financial")
+                    {
+                        <div class="dm-form-2col">
+                            <div class="dm-form-row">
+                                <label>Estimated Cost</label>
+                                <input class="dm-input" type="number" step="0.01" @bind="_newPr.EstimatedCost" placeholder="0.00" />
+                            </div>
+                            <div class="dm-form-row">
+                                <label>Currency</label>
+                                <select class="dm-input dm-select" @bind="_newPr.Currency">
+                                    <option value="ZAR">ZAR</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Vendor / Supplier</label>
+                            <input class="dm-input" @bind="_newPr.Supplier" placeholder="e.g. Microsoft, Contractor name" />
+                        </div>
+                    }
+                    @if (_newPr.ResourceType == "Physical")
+                    {
+                        <div class="dm-form-row">
+                            <label>Quantity</label>
+                            <input class="dm-input" type="number" @bind="_newPr.Quantity" placeholder="e.g. 10" />
+                        </div>
+                        <div class="dm-form-row">
+                            <label>Vendor / Supplier</label>
+                            <input class="dm-input" @bind="_newPr.Supplier" placeholder="e.g. Dell, HP, Local vendor" />
+                        </div>
+                    }
+                    @if (_newPr.ResourceType == "InformationKnowledge" || _newPr.ResourceType == "GovernanceSupport")
+                    {
+                        <div class="dm-form-row">
+                            <label>Owner / Responsible</label>
+                            <input class="dm-input" @bind="_newPr.Owner" placeholder="e.g. Business Analyst, PMO" />
+                        </div>
+                    }
+                    <div class="dm-form-row">
+                        <label>Status</label>
+                        <select class="dm-input dm-select" @bind="_newPr.Status">
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Available">Available</option>
+                            <option value="Acquired">Acquired</option>
+                            <option value="In Place">In Place</option>
+                        </select>
+                    </div>
+                    <div class="dm-form-row">
+                        <label>Notes</label>
+                        <textarea class="dm-input dm-textarea" @bind="_newPr.Notes" placeholder="Additional notes..."></textarea>
+                    </div>
+                    <div class="dm-form-actions">
+                        <button class="dm-btn dm-btn--primary" @onclick="SaveProjectResource">Save Resource</button>
+                        <button class="dm-btn dm-btn--ghost" @onclick="() => _showAddPr = false">Cancel</button>
+                        @if (!string.IsNullOrEmpty(_msgPr))
+                        {
+                            <span class="dm-msg @(_msgPr.StartsWith("Error") ? "dm-msg--error" : "")">@_msgPr</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Delete Project Resource Confirm -->
+    @if (_prDeleteId.HasValue)
+    {
+        <div class="dm-modal-overlay" @onclick="() => _prDeleteId = null">
+            <div class="dm-modal" @onclick:stopPropagation="true" style="max-width:380px;">
+                <div class="dm-modal__header">
+                    <div class="dm-modal__title">Delete Resource?</div>
+                    <button class="dm-modal__close" @onclick="() => _prDeleteId = null">&times;</button>
+                </div>
+                <p style="color:rgba(255,255,255,.7);margin:0 0 20px;">This will permanently remove this resource. This cannot be undone.</p>
+                <div class="dm-form-actions">
+                    <button class="dm-btn dm-btn--danger" @onclick="ConfirmDeletePr">Delete</button>
+                    <button class="dm-btn dm-btn--ghost" @onclick="() => _prDeleteId = null">Cancel</button>
+                    @if (!string.IsNullOrEmpty(_msgPrDel))
+                    {
+                        <span class="dm-msg dm-msg--error">@_msgPrDel</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -265,6 +485,18 @@
     private string _msgR = "";
     private string _msgA = "";
 
+    // Project Resources
+    private List<DemandManagement2.Ui.Services.ProjectResourceItem>? _projectResources;
+    private bool _showAddPr;
+    private string _msgPr = "";
+    private string _prFilterType = "";
+    private Guid? _prDeleteId;
+    private string _msgPrDel = "";
+    private DemandManagement2.Ui.Services.CreateProjectResourceRequest _newPr = new();
+
+    // Drag-and-drop (JS-based)
+    private DotNetObjectReference<Capacity>? _dotNetRef;
+
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
@@ -283,6 +515,7 @@
         _resources = await Api.GetResources();
         _allocations = await Api.GetAllocations();
         _demands = await Api.GetDemands();
+        _projectResources = await Api.GetProjectResources();
     }
 
     private async Task AddResource()
@@ -320,7 +553,184 @@
             _msgA = $"Error: {ex.Message}";
         }
     }
+
+    // ---- Project Resource methods ----
+    private void OpenPrModal()
+    {
+        _newPr = new();
+        _msgPr = "";
+        _showAddPr = true;
+    }
+
+    private List<DemandManagement2.Ui.Services.ProjectResourceItem> GetFilteredPr()
+    {
+        var list = _projectResources ?? new();
+        if (!string.IsNullOrEmpty(_prFilterType))
+            list = list.Where(r => r.ResourceType == _prFilterType).ToList();
+        return list;
+    }
+
+    private async Task SaveProjectResource()
+    {
+        if (_newPr.DemandRequestId == Guid.Empty) { _msgPr = "Error: Please select a demand."; return; }
+        if (string.IsNullOrWhiteSpace(_newPr.Name)) { _msgPr = "Error: Name is required."; return; }
+        try
+        {
+            _msgPr = "Saving...";
+            StateHasChanged();
+            await Api.CreateProjectResource(_newPr);
+            _showAddPr = false;
+            _msgPr = "";
+            _newPr = new();
+            _projectResources = await Api.GetProjectResources();
+        }
+        catch (Exception ex)
+        {
+            _msgPr = $"Error: {ex.Message}";
+        }
+    }
+
+    private void RequestDeletePr(Guid id) { _prDeleteId = id; _msgPrDel = ""; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_hasAccess) return;
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("setPrDragRef", _dotNetRef);
+    }
+
+    [Microsoft.JSInterop.JSInvokable]
+    public async Task OnCardDropped(string dragIdStr, string targetIdStr)
+    {
+        if (!Guid.TryParse(dragIdStr, out var dragId) || !Guid.TryParse(targetIdStr, out var targetId)) return;
+
+        var list = (_projectResources ?? new()).ToList();
+        var dragIdx = list.FindIndex(r => r.Id == dragId);
+        if (dragIdx < 0) return;
+
+        var dragItem = list[dragIdx];
+        list.RemoveAt(dragIdx);
+        var targetIdx = list.FindIndex(r => r.Id == targetId);
+        if (targetIdx < 0) targetIdx = list.Count;
+        list.Insert(targetIdx, dragItem);
+
+        _projectResources = list;
+        await InvokeAsync(StateHasChanged);
+
+        var reorderData = list.Select((r, i) => new DemandManagement2.Ui.Services.ReorderProjectResourceRequest(r.Id, i)).ToList();
+        try { await Api.ReorderProjectResources(reorderData); }
+        catch { }
+    }
+
+    public void Dispose() => _dotNetRef?.Dispose();
+
+    private async Task ConfirmDeletePr()
+    {
+        if (!_prDeleteId.HasValue) return;
+        try
+        {
+            _msgPrDel = "Deleting...";
+            StateHasChanged();
+            await Api.DeleteProjectResource(_prDeleteId.Value);
+            _prDeleteId = null;
+            _projectResources = await Api.GetProjectResources();
+        }
+        catch (Exception ex)
+        {
+            _msgPrDel = $"Error: {ex.Message}";
+        }
+    }
+
+    private RenderFragment PrCard(DemandManagement2.Ui.Services.ProjectResourceItem r) => __builder =>
+    {
+        <div class="dm-pr-card" draggable="true" data-pr-id="@r.Id">
+            <div class="dm-pr-card__drag-handle" title="Drag to reorder">&#9776;</div>
+            <div class="dm-pr-card__top">
+                <span class="dm-pr-badge dm-pr-badge--@PrTypeCss(r.ResourceType)">@PrTypeLabel(r.ResourceType)</span>
+                <span class="dm-pr-status dm-pr-status--@PrStatusCss(r.Status)">@r.Status</span>
+            </div>
+            <div class="dm-pr-card__name">@r.Name</div>
+            @if (!string.IsNullOrEmpty(r.Description))
+            {
+                <div class="dm-pr-card__desc">@r.Description</div>
+            }
+            <div class="dm-pr-card__details">
+                @if (r.EstimatedCost.HasValue)
+                {
+                    <div class="dm-pr-detail"><span class="dm-pr-detail__label">Est. Cost</span><span class="dm-pr-detail__val dm-pr-cost">@(r.Currency ?? "ZAR") @r.EstimatedCost.Value.ToString("N2")</span></div>
+                }
+                @if (r.Quantity.HasValue)
+                {
+                    <div class="dm-pr-detail"><span class="dm-pr-detail__label">Quantity</span><span class="dm-pr-detail__val">@r.Quantity</span></div>
+                }
+                @if (!string.IsNullOrEmpty(r.Supplier))
+                {
+                    <div class="dm-pr-detail"><span class="dm-pr-detail__label">Vendor</span><span class="dm-pr-detail__val">@r.Supplier</span></div>
+                }
+                @if (!string.IsNullOrEmpty(r.Owner))
+                {
+                    <div class="dm-pr-detail"><span class="dm-pr-detail__label">Owner</span><span class="dm-pr-detail__val">@r.Owner</span></div>
+                }
+                @if (!string.IsNullOrEmpty(r.Notes))
+                {
+                    <div class="dm-pr-detail"><span class="dm-pr-detail__label">Notes</span><span class="dm-pr-detail__val">@r.Notes</span></div>
+                }
+            </div>
+            <div class="dm-pr-card__footer">
+                <a href="/demands/@r.DemandRequestId" class="dm-pr-card__demand">@r.DemandTitle</a>
+                <button class="dm-pr-delete" @onclick="() => RequestDeletePr(r.Id)">Delete</button>
+            </div>
+        </div>
+    };
+
+    private string PrTypeLabel(string t) => t switch
+    {
+        "Financial" => "Financial",
+        "Physical" => "Physical",
+        "InformationKnowledge" => "Info & Knowledge",
+        "GovernanceSupport" => "Governance & Support",
+        _ => t
+    };
+
+    private string PrTypeCss(string t) => t switch
+    {
+        "Financial" => "fin",
+        "Physical" => "phys",
+        "InformationKnowledge" => "info",
+        "GovernanceSupport" => "gov",
+        _ => "fin"
+    };
+
+    private int PrTypeOrder(string t) => t switch { "Financial" => 0, "Physical" => 1, "InformationKnowledge" => 2, "GovernanceSupport" => 3, _ => 99 };
+
+    private string PrStatusCss(string s) => s switch
+    {
+        "Pending" => "pending",
+        "In Progress" => "inprogress",
+        "Approved" => "approved",
+        "Available" or "Acquired" or "In Place" => "done",
+        _ => "pending"
+    };
+
+    private string PrTypeHint(string t) => t switch
+    {
+        "Financial" => "Budget required: software/licensing costs, contractor fees, training, marketing, equipment purchases.",
+        "Physical" => "Physical items required: laptops, workstations, servers, office equipment.",
+        "InformationKnowledge" => "Data & insights needed: business requirements, user stories, process maps, policies, reports.",
+        "GovernanceSupport" => "Structures that guide the project: risk frameworks, change management, QA standards, governance committees.",
+        _ => ""
+    };
+
+    private string PrNamePlaceholder(string t) => t switch
+    {
+        "Financial" => "e.g. AWS Cloud Licensing, Contractor Fees",
+        "Physical" => "e.g. Developer Laptops, Network Equipment",
+        "InformationKnowledge" => "e.g. Business Requirements Document, Process Map",
+        "GovernanceSupport" => "e.g. Risk Management Framework, Change Management Process",
+        _ => "Resource name"
+    };
 }
+
 
 <style>
 :root{
@@ -580,12 +990,205 @@
 .dm-access-denied__msg{ color: var(--dm-muted); max-width: 500px; margin: 0 auto 20px; line-height: 1.6; }
 .dm-access-denied__msg a{ color: #ffcd11; text-decoration: underline; }
 
+/* Project Resource styles */
+.dm-btn--danger{
+  background: rgba(239,68,68,.12);
+  color: #ef4444;
+  border-color: rgba(239,68,68,.3);
+}
+.dm-btn--danger:hover{ background: rgba(239,68,68,.22); }
+.dm-msg--error{ color: #ef4444; }
+.dm-modal--wide{ min-width: 480px; max-height: 90vh; overflow-y: auto; }
+.dm-textarea{ resize: vertical; min-height: 68px; font-family: inherit; width: 100%; box-sizing: border-box; }
+.dm-form-2col{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dm-pr-hint{
+  font-size: 12.5px;
+  color: rgba(255,255,255,.45);
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,205,17,.12);
+  border-radius: 8px;
+  padding: 9px 12px;
+  line-height: 1.55;
+}
+
+.dm-pr-toolbar{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.dm-pr-tabs{ display: flex; gap: 6px; flex-wrap: wrap; }
+.dm-pr-tab{
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,205,17,.3);
+  background: #111;
+  color: rgba(255,205,17,.7);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all .15s;
+  letter-spacing: .03em;
+}
+.dm-pr-tab:hover{
+  background: #1a1a00;
+  border-color: rgba(255,205,17,.6);
+  color: #ffcd11;
+}
+.dm-pr-tab--active,
+.dm-pr-tab--fin.dm-pr-tab--active,
+.dm-pr-tab--phys.dm-pr-tab--active,
+.dm-pr-tab--info.dm-pr-tab--active,
+.dm-pr-tab--gov.dm-pr-tab--active{
+  background: #ffcd11;
+  border-color: #ffcd11;
+  color: #000;
+  box-shadow: 0 2px 10px rgba(255,205,17,.35);
+}
+
+.dm-pr-kpis{ display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.dm-pr-kpi{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,205,17,.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-width: 90px;
+}
+.dm-pr-kpi--fin{ border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.05); }
+.dm-pr-kpi--phys{ border-color: rgba(59,130,246,.25); background: rgba(59,130,246,.05); }
+.dm-pr-kpi--info{ border-color: rgba(168,85,247,.25); background: rgba(168,85,247,.05); }
+.dm-pr-kpi--gov{ border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.05); }
+.dm-pr-kpi--cost{ border-color: rgba(255,205,17,.25); background: rgba(255,205,17,.05); }
+.dm-pr-kpi__label{ font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.55); }
+.dm-pr-kpi__value{ font-size: 22px; font-weight: 950; color: rgba(255,255,255,.92); }
+
+.dm-pr-group{ margin-bottom: 18px; }
+.dm-pr-group__header{ display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.dm-pr-group__count{ font-size: 12px; color: rgba(255,255,255,.4); }
+
+.dm-pr-cards{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.dm-pr-card{
+  background: rgba(0,0,0,.15);
+  border: 1px solid rgba(255,205,17,.15);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+  max-width: 240px;
+  flex-shrink: 0;
+  cursor: default;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.dm-pr-card:hover{ border-color: rgba(255,205,17,.35); }
+.dm-pr-card__top{ display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.dm-pr-card__name{ font-size: 15px; font-weight: 900; color: rgba(255,255,255,.92); }
+.dm-pr-card__desc{ font-size: 12.5px; color: rgba(255,255,255,.62); line-height: 1.5; }
+.dm-pr-card__details{ display: flex; flex-direction: column; gap: 5px; }
+.dm-pr-detail{ display: flex; justify-content: space-between; font-size: 12.5px; gap: 8px; }
+.dm-pr-detail__label{ color: rgba(255,255,255,.42); white-space: nowrap; }
+.dm-pr-detail__val{ color: rgba(255,255,255,.85); text-align: right; }
+.dm-pr-cost{ color: #f59e0b; font-weight: 800; }
+.dm-pr-card__footer{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,205,17,.1);
+}
+.dm-pr-card__demand{ font-size: 11.5px; color: #ffcd11; text-decoration: none; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-pr-card__demand:hover{ text-decoration: underline; }
+.dm-pr-delete{
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(239,68,68,.25);
+  background: rgba(239,68,68,.08);
+  color: rgba(239,68,68,.75);
+  cursor: pointer;
+  transition: all .15s;
+}
+.dm-pr-delete:hover{ background: rgba(239,68,68,.18); color: #ef4444; }
+
+/* Type badges */
+.dm-pr-badge{
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.dm-pr-badge--fin{ background: rgba(245,158,11,.15); color: #f59e0b; border: 1px solid rgba(245,158,11,.3); }
+.dm-pr-badge--phys{ background: rgba(59,130,246,.15); color: #3b82f6; border: 1px solid rgba(59,130,246,.3); }
+.dm-pr-badge--info{ background: rgba(168,85,247,.15); color: #a855f7; border: 1px solid rgba(168,85,247,.3); }
+.dm-pr-badge--gov{ background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+
+/* Status pills */
+.dm-pr-status{
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.dm-pr-status--pending{ background: rgba(255,255,255,.07); color: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.1); }
+.dm-pr-status--inprogress{ background: rgba(245,158,11,.13); color: #f59e0b; border: 1px solid rgba(245,158,11,.3); }
+.dm-pr-status--approved{ background: rgba(59,130,246,.13); color: #3b82f6; border: 1px solid rgba(59,130,246,.3); }
+.dm-pr-status--done{ background: rgba(34,197,94,.13); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+
+/* Drag-and-drop */
+.dm-pr-drag-hint{ font-style: italic; color: rgba(255,255,255,.35); font-size: 11.5px; }
+
+.dm-pr-card__drag-handle{
+  color: rgba(255,255,255,.25);
+  font-size: 13px;
+  cursor: grab;
+  user-select: none;
+  text-align: center;
+  padding-bottom: 4px;
+  margin-bottom: 2px;
+  border-bottom: 1px dashed rgba(255,255,255,.08);
+  transition: color .15s;
+  letter-spacing: 2px;
+}
+.dm-pr-card__drag-handle:active{ cursor: grabbing; }
+.dm-pr-card:hover .dm-pr-card__drag-handle{ color: rgba(255,255,255,.55); }
+
+/* Applied by JS, not Blazor — no re-render needed */
+.dm-pr-card--dragging{
+  opacity: 0.3;
+  border-style: dashed !important;
+}
+.dm-pr-card--dragover{
+  border-color: #ffcd11 !important;
+  border-style: solid !important;
+  box-shadow: 0 0 0 3px rgba(255,205,17,.2), 0 8px 24px rgba(0,0,0,.3);
+  transform: scale(1.02);
+}
+
 @@media (max-width: 900px){
   .dm-grid--4{ grid-template-columns: repeat(2, 1fr); }
+  .dm-pr-toolbar{ flex-direction: column; align-items: flex-start; }
 }
 @@media (max-width: 700px){
   .dm-grid--2, .dm-grid--4{ grid-template-columns: 1fr; }
   .dm-page__header{ flex-direction: column; }
   .dm-alloc-row{ grid-template-columns: 1fr; }
+  .dm-pr-cards{ grid-template-columns: 1fr; }
+  .dm-form-2col{ grid-template-columns: 1fr; }
+  .dm-modal--wide{ min-width: unset; }
 }
 </style>

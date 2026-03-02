@@ -48,4 +48,5 @@ public class DemandRequest
     public ICollection<DemandEvent> Events { get; set; } = new List<DemandEvent>();
     public ICollection<DemandAttachment> Attachments { get; set; } = new List<DemandAttachment>();
     public ICollection<BudgetEntry> BudgetEntries { get; set; } = new List<BudgetEntry>();
+    public ICollection<ProjectResource> ProjectResources { get; set; } = new List<ProjectResource>();
 }

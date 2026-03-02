@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<DemandEvent> DemandEvents => Set<DemandEvent>();
     public DbSet<DemandAttachment> DemandAttachments => Set<DemandAttachment>();
     public DbSet<BudgetEntry> BudgetEntries => Set<BudgetEntry>();
+    public DbSet<ProjectResource> ProjectResources => Set<ProjectResource>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -85,6 +86,19 @@ public class AppDbContext : DbContext
         {
             e.Property(b => b.PlannedAmount).HasPrecision(18, 2);
             e.Property(b => b.ActualAmount).HasPrecision(18, 2);
+        });
+
+        // ProjectResources relationship
+        modelBuilder.Entity<DemandRequest>()
+            .HasMany(d => d.ProjectResources)
+            .WithOne(r => r.DemandRequest)
+            .HasForeignKey(r => r.DemandRequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProjectResource>(e =>
+        {
+            e.Property(r => r.EstimatedCost).HasPrecision(18, 2);
+            e.Property(r => r.ResourceType).HasConversion<string>();
         });
 
         base.OnModelCreating(modelBuilder);

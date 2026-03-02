@@ -29,6 +29,67 @@
             link.click();
             document.body.removeChild(link);
         };
+
+        window.setPrDragRef = function (dotNetRef) {
+            window._prDotNetRef = dotNetRef;
+
+            if (window._prDragInitialized) return;
+            window._prDragInitialized = true;
+
+            var dragId = null;
+
+            function nearestCard(el) {
+                while (el && !el.dataset.prId) el = el.parentElement;
+                return (el && el.dataset.prId) ? el : null;
+            }
+
+            document.addEventListener('dragstart', function (e) {
+                var card = nearestCard(e.target);
+                if (!card) return;
+                dragId = card.dataset.prId;
+                e.dataTransfer.setData('text/plain', dragId);
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(function () { card.classList.add('dm-pr-card--dragging'); }, 0);
+            });
+
+            document.addEventListener('dragend', function () {
+                document.querySelectorAll('.dm-pr-card--dragging, .dm-pr-card--dragover')
+                    .forEach(function (el) { el.classList.remove('dm-pr-card--dragging', 'dm-pr-card--dragover'); });
+                dragId = null;
+            });
+
+            document.addEventListener('dragover', function (e) {
+                if (!dragId) return;
+                if (nearestCard(e.target)) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+
+            document.addEventListener('dragenter', function (e) {
+                if (!dragId) return;
+                var card = nearestCard(e.target);
+                document.querySelectorAll('.dm-pr-card--dragover')
+                    .forEach(function (el) { el.classList.remove('dm-pr-card--dragover'); });
+                if (card && card.dataset.prId !== dragId) {
+                    card.classList.add('dm-pr-card--dragover');
+                }
+            });
+
+            document.addEventListener('drop', function (e) {
+                var card = nearestCard(e.target);
+                var fromId = dragId;
+                document.querySelectorAll('.dm-pr-card--dragging, .dm-pr-card--dragover')
+                    .forEach(function (el) { el.classList.remove('dm-pr-card--dragging', 'dm-pr-card--dragover'); });
+                dragId = null;
+                if (card && fromId && card.dataset.prId !== fromId) {
+                    e.preventDefault();
+                    if (window._prDotNetRef) {
+                        window._prDotNetRef.invokeMethodAsync('OnCardDropped', fromId, card.dataset.prId);
+                    }
+                }
+            });
+        };
     </script>
 </body>
 

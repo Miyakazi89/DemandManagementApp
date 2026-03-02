@@ -267,6 +267,40 @@ public class DemandApiClient
     }
 
     // -----------------------------
+    // Project Resources
+    // -----------------------------
+    public async Task<List<ProjectResourceItem>> GetProjectResources(Guid? demandId = null)
+    {
+        await AttachTokenAsync();
+        var url = demandId.HasValue ? $"/api/project-resources?demandId={demandId}" : "/api/project-resources";
+        return await _http.GetFromJsonAsync<List<ProjectResourceItem>>(url, JsonOptions) ?? new();
+    }
+
+    public async Task CreateProjectResource(CreateProjectResourceRequest request)
+    {
+        await AttachTokenAsync();
+        (await _http.PostAsJsonAsync("/api/project-resources", request, JsonOptions)).EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateProjectResource(Guid id, CreateProjectResourceRequest request)
+    {
+        await AttachTokenAsync();
+        (await _http.PutAsJsonAsync($"/api/project-resources/{id}", request, JsonOptions)).EnsureSuccessStatusCode();
+    }
+
+    public async Task DeleteProjectResource(Guid id)
+    {
+        await AttachTokenAsync();
+        (await _http.DeleteAsync($"/api/project-resources/{id}")).EnsureSuccessStatusCode();
+    }
+
+    public async Task ReorderProjectResources(List<ReorderProjectResourceRequest> items)
+    {
+        await AttachTokenAsync();
+        (await _http.PostAsJsonAsync("/api/project-resources/reorder", items, JsonOptions)).EnsureSuccessStatusCode();
+    }
+
+    // -----------------------------
     // Decision Notes
     // -----------------------------
     public async Task<List<DecisionNoteItem>> GetDecisionNotes(Guid demandId)
@@ -589,4 +623,42 @@ public class CreateBudgetEntry
     public decimal ActualAmount { get; set; }
     public string Category { get; set; } = "CapEx";
     public string Notes { get; set; } = "";
+}
+
+// -----------------------------
+// Project Resource Models
+// -----------------------------
+public record ProjectResourceItem(
+    Guid Id,
+    Guid DemandRequestId,
+    string DemandTitle,
+    string ResourceType,
+    string Name,
+    string? Description,
+    decimal? EstimatedCost,
+    string? Currency,
+    int? Quantity,
+    string? Supplier,
+    string? Owner,
+    string? Notes,
+    string Status,
+    DateTime CreatedAtUtc,
+    int SortOrder
+);
+
+public record ReorderProjectResourceRequest(Guid Id, int SortOrder);
+
+public class CreateProjectResourceRequest
+{
+    public Guid DemandRequestId { get; set; }
+    public string ResourceType { get; set; } = "Financial";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public decimal? EstimatedCost { get; set; }
+    public string? Currency { get; set; } = "ZAR";
+    public int? Quantity { get; set; }
+    public string? Supplier { get; set; }
+    public string? Owner { get; set; }
+    public string? Notes { get; set; }
+    public string Status { get; set; } = "Pending";
 }
